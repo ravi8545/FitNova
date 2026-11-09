@@ -1,0 +1,54 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Python / Django Backend
+*.pyc
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+*/*/*/__pycache__/
+
+# Environments & sensitive files
+.env
+.env.local
+*.backup*
+test_repair.sqlite3
+inspect_*.py
+repair_*.py
+apply_*.py
+
+# Backend & backend_supliments_reports
+backend/.env
+backend/venv/
+backend/db.sqlite3*
+backend/media/
+backend/staticfiles/
+
+backend_supliments_reports/.env
+backend_supliments_reports/venv/
+backend_supliments_reports/db.sqlite3*
+backend_supliments_reports/media/
+backend_supliments_reports/staticfiles/

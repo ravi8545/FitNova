@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Background Studio Glow -->
+    <radialGradient id="omegaBackdrop" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#D97706" stop-opacity="0.2" />
+      <stop offset="70%" stop-color="#0F172A" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Amber Glass/PET Bottle Lighting -->
+    <linearGradient id="amberBottle" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1A0D00" />
+      <stop offset="15%" stop-color="#451A03" />
+      <stop offset="35%" stop-color="#78350F" />
+      <stop offset="55%" stop-color="#451A03" />
+      <stop offset="85%" stop-color="#260F03" />
+      <stop offset="100%" stop-color="#0F0500" />
+    </linearGradient>
+
+    <!-- Glass Specular Reflection Streak -->
+    <linearGradient id="glassReflection" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FEF3C7" stop-opacity="0" />
+      <stop offset="50%" stop-color="#FEF3C7" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FEF3C7" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Golden Foil Label Finish -->
+    <linearGradient id="goldFoil" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B45309" />
+      <stop offset="25%" stop-color="#F59E0B" />
+      <stop offset="50%" stop-color="#FDE68A" />
+      <stop offset="75%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+
+    <!-- Golden Softgel Capsule Gradient -->
+    <linearGradient id="softgelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="40%" stop-color="#F59E0B" />
+      <stop offset="80%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#92400E" />
+    </linearGradient>
+
+    <!-- Cap Gradient -->
+    <linearGradient id="bottleCap" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="25%" stop-color="#334155" />
+      <stop offset="50%" stop-color="#1E293B" />
+      <stop offset="75%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+
+    <!-- Drop Shadow -->
+    <radialGradient id="bottleShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#000000" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Studio Glow -->
+  <circle cx="200" cy="200" r="170" fill="url(#omegaBackdrop)" />
+
+  <!-- Ground Drop Shadow -->
+  <ellipse cx="200" cy="350" rx="105" ry="20" fill="url(#bottleShadow)" />
+
+  <!-- Bottle Group -->
+  <g transform="translate(0, 10)">
+    <!-- Main Amber Bottle Body -->
+    <path d="M 115 110 C 115 90, 130 80, 150 80 L 250 80 C 270 80, 285 90, 285 110 L 285 305 C 285 325, 270 334, 245 334 L 155 334 C 130 334, 115 325, 115 305 Z" fill="url(#amberBottle)" />
+
+    <!-- Glass Specular Highlight -->
+    <rect x="156" y="80" width="24" height="252" fill="url(#glassReflection)" />
+
+    <!-- Bottle Neck -->
+    <rect x="142" y="65" width="116" height="18" rx="2" fill="#2E1002" />
+
+    <!-- Screw Cap -->
+    <rect x="132" y="32" width="136" height="36" rx="5" fill="url(#bottleCap)" stroke="#475569" stroke-width="1.2" />
+    <!-- Cap Ridges -->
+    <g stroke="#0F172A" stroke-width="2" opacity="0.6">
+      <line x1="144" y1="34" x2="144" y2="66" />
+      <line x1="156" y1="34" x2="156" y2="66" />
+      <line x1="168" y1="34" x2="168" y2="66" />
+      <line x1="180" y1="34" x2="180" y2="66" />
+      <line x1="192" y1="34" x2="192" y2="66" />
+      <line x1="204" y1="34" x2="204" y2="66" />
+      <line x1="216" y1="34" x2="216" y2="66" />
+      <line x1="228" y1="34" x2="228" y2="66" />
+      <line x1="240" y1="34" x2="240" y2="66" />
+      <line x1="252" y1="34" x2="252" y2="66" />
+    </g>
+    <ellipse cx="200" cy="34" rx="66" ry="6" fill="#64748B" opacity="0.4" />
+
+    <!-- Commercial Luxury Label -->
+    <rect x="118" y="118" width="164" height="182" rx="8" fill="#0A0E17" stroke="#1E2E40" stroke-width="1.5" />
+
+    <!-- Gold Foil Border Bands -->
+    <rect x="118" y="118" width="164" height="6" fill="url(#goldFoil)" />
+    <rect x="118" y="294" width="164" height="6" fill="url(#goldFoil)" />
+
+    <!-- Label Content -->
+    <g text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+      <!-- Brand -->
+      <text x="200" y="148" font-size="12" font-weight="900" fill="#FBBF24" letter-spacing="4">FITNOVA</text>
+
+      <!-- Pill Category Badge -->
+      <rect x="146" y="156" width="108" height="16" rx="8" fill="url(#goldFoil)" />
+      <text x="200" y="168" font-size="8.5" font-weight="900" fill="#000000" letter-spacing="1">ULTRA PURE PURIFIED</text>
+
+      <!-- Main Title -->
+      <text x="200" y="206" font-size="25" font-weight="900" fill="#FFFFFF" letter-spacing="1.5">OMEGA-3</text>
+      
+      <!-- Sub-spec -->
+      <text x="200" y="226" font-size="12" font-weight="800" fill="#F59E0B" letter-spacing="2">TRIPLE STRENGTH</text>
+      <text x="200" y="244" font-size="9" font-weight="700" fill="#CBD5E1" letter-spacing="1">1000 mg FISH OIL</text>
+
+      <!-- Golden Softgel Capsule Graphic in Center of Label -->
+      <ellipse cx="200" cy="264" rx="20" ry="9" fill="url(#softgelGrad)" stroke="#FDE68A" stroke-width="1" transform="rotate(-15 200 264)" />
+      <!-- Softgel shine -->
+      <ellipse cx="198" cy="262" rx="12" ry="4" fill="#FFFFFF" opacity="0.6" transform="rotate(-15 198 262)" />
+
+      <!-- Specs Footer -->
+      <rect x="130" y="278" width="140" height="13" rx="3" fill="#141E2B" />
+      <text x="200" y="287" font-size="7" font-weight="600" fill="#FBBF24">550mg EPA • 350mg DHA • NO BURPS</text>
+    </g>
+
+    <!-- Edge Rim Lighting -->
+    <path d="M 117 125 L 117 300" stroke="#F59E0B" stroke-width="2" stroke-opacity="0.5" />
+    <path d="M 283 125 L 283 300" stroke="#D97706" stroke-width="1.5" stroke-opacity="0.4" />
+  </g>
+</svg>

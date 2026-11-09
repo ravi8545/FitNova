@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B12" />
+      <stop offset="50%" stop-color="#0D1622" />
+      <stop offset="100%" stop-color="#05080E" />
+    </linearGradient>
+    <radialGradient id="greenAura" cx="75%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2BAF34" stop-opacity="0.45" />
+      <stop offset="50%" stop-color="#145318" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#090D16" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="tubGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#151C26" />
+      <stop offset="30%" stop-color="#223040" />
+      <stop offset="70%" stop-color="#182330" />
+      <stop offset="100%" stop-color="#0E1620" />
+    </linearGradient>
+    <linearGradient id="tubLabel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1118" />
+      <stop offset="100%" stop-color="#172737" />
+    </linearGradient>
+    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background base -->
+  <rect width="1000" height="360" fill="url(#bgGrad)" />
+
+  <!-- Ambient Green Aura / Glow in Right Half -->
+  <circle cx="780" cy="180" r="260" fill="url(#greenAura)" />
+  <circle cx="740" cy="190" r="140" fill="#2BAF34" opacity="0.15" filter="url(#neonGlow)" />
+
+  <!-- Geometric / Energy Grid Lines -->
+  <g stroke="#2BAF34" stroke-opacity="0.08" stroke-width="1">
+    <line x1="500" y1="0" x2="1000" y2="360" />
+    <line x1="600" y1="0" x2="1000" y2="240" />
+    <line x1="700" y1="0" x2="1000" y2="120" />
+    <line x1="550" y1="360" x2="900" y2="0" />
+  </g>
+
+  <!-- Gym Lighting Streaks -->
+  <path d="M 620 40 L 780 180 L 980 120" stroke="#2BAF34" stroke-width="2" stroke-opacity="0.25" fill="none" filter="url(#neonGlow)" />
+  
+  <!-- Floating Energy Sparkles/Motes -->
+  <circle cx="680" cy="90" r="3" fill="#35D440" opacity="0.6" filter="url(#neonGlow)" />
+  <circle cx="890" cy="80" r="2.5" fill="#35D440" opacity="0.7" />
+  <circle cx="620" cy="270" r="3.5" fill="#2BAF34" opacity="0.5" />
+  <circle cx="920" cy="260" r="4" fill="#35D440" opacity="0.8" filter="url(#neonGlow)" />
+  <circle cx="840" cy="310" r="2" fill="#2BAF34" opacity="0.6" />
+
+  <!-- Premium Whey Protein Tub (Vector Illustration with Realistic Lighting) -->
+  <g transform="translate(710, 50)" filter="url(#neonGlow)">
+    <!-- Base Tub Body -->
+    <!-- Lid -->
+    <ellipse cx="90" cy="28" rx="72" ry="16" fill="#1C2735" stroke="#2BAF34" stroke-width="2" stroke-opacity="0.7" />
+    <rect x="18" y="28" width="144" height="24" rx="4" fill="#141E2B" />
+    <!-- Ridges on lid -->
+    <line x1="35" y1="28" x2="35" y2="50" stroke="#253548" stroke-width="2" />
+    <line x1="55" y1="28" x2="55" y2="50" stroke="#253548" stroke-width="2" />
+    <line x1="75" y1="28" x2="75" y2="50" stroke="#253548" stroke-width="2" />
+    <line x1="95" y1="28" x2="95" y2="50" stroke="#253548" stroke-width="2" />
+    <line x1="115" y1="28" x2="115" y2="50" stroke="#253548" stroke-width="2" />
+    <line x1="135" y1="28" x2="135" y2="50" stroke="#253548" stroke-width="2" />
+
+    <!-- Jar Shoulder -->
+    <path d="M 18 52 C 18 65, 0 85, 0 100 L 0 220 C 0 238, 30 248, 90 248 C 150 248, 180 238, 180 220 L 180 100 C 180 85, 162 65, 162 52 Z" fill="url(#tubGrad)" stroke="#1F3042" stroke-width="1.5" />
+
+    <!-- Rim highlight -->
+    <path d="M 2 110 L 2 215" stroke="#2BAF34" stroke-width="3" stroke-opacity="0.8" />
+    <path d="M 178 110 L 178 215" stroke="#2BAF34" stroke-width="1.5" stroke-opacity="0.4" />
+
+    <!-- Sleek Center Label -->
+    <rect x="14" y="95" width="152" height="118" rx="8" fill="url(#tubLabel)" stroke="#2BAF34" stroke-width="1.2" stroke-opacity="0.5" />
+    
+    <!-- Neon Brand Text on Tub -->
+    <text x="90" y="125" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="800" font-size="14" fill="#2BAF34" text-anchor="middle" letter-spacing="3" opacity="0.8">FITNOVA</text>
+    <text x="90" y="152" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="900" font-size="24" fill="#2BAF34" text-anchor="middle" letter-spacing="1" opacity="0.6">WHEY</text>
+    <text x="90" y="172" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-weight="700" font-size="11" fill="#35D440" text-anchor="middle" letter-spacing="2" opacity="0.7">PROTEIN ISOLATE</text>
+    <text x="90" y="195" font-family="Arial, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">27g PROTEIN • 5.8g BCAA • 0g SUGAR</text>
+
+    <!-- Bottom reflection / base shadow -->
+    <ellipse cx="90" cy="246" rx="85" ry="12" fill="#000000" opacity="0.6" />
+  </g>
+</svg>

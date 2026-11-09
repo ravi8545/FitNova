@@ -1,0 +1,29 @@
+/* =========================================================
+   SHARED PAGE WIDTH HELPERS
+   Colours, fonts and base resets now live in styles/index.css
+   (the single design system). This file only keeps the layout
+   helpers used by the About / Contact pages.
+========================================================= */
+:root {
+  --page-max: 1200px;
+  --page-gutter: 24px;
+}
+@media (max-width: 1024px) { :root { --page-gutter: 20px; } }
+@media (max-width: 768px)  { :root { --page-gutter: 18px; } }
+@media (max-width: 480px)  { :root { --page-gutter: 16px; } }
+@media (max-width: 360px)  { :root { --page-gutter: 12px; } }
+
+.page-container {
+  width: min(var(--page-max), calc(100% - (var(--page-gutter) * 2)));
+  margin-inline: auto;
+  padding-block: 0 clamp(32px, 5vw, 56px);
+}
+
+/* page = full-height column so the footer always sits at the bottom */
+.page-shell {
+  display: flex;
+  min-height: calc(100vh - var(--topbar-height));
+  flex-direction: column;
+  min-width: 0;
+}
+.page-shell > .page-container { flex: 1; }

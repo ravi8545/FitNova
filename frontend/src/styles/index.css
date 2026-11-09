@@ -1,0 +1,348 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   FITNOVA DESIGN SYSTEM  -  single source of truth
+   -----------------------------------------------------------------------------
+   1. Tokens          (:root)               colours, radii, type, layout
+   2. Base            (@layer base)         body, scrollbar, focus
+   3. Components      (@layer components)   .card .btn-* .input .label ...
+   4. App frame       (.app-main)           one content width/padding for all pages
+   5. Page chrome     (.app-main ...)       header / card / button / tab rules that
+                                            every page's own class names plug into
+   Tailwind colours live in tailwind.config.js and use the SAME values.
+============================================================================= */
+
+/* ---------- 1. TOKENS ---------- */
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #090D16;            /* page */
+  --bg-2: #0B111A;          /* inputs, wells, quiet bands */
+  --surface: #0D141C;       /* cards, panels, modals */
+  --surface-2: #121B26;     /* hover / raised */
+  --line: #162230;          /* chrome dividers (sidebar, top bar) */
+  --line-strong: #1E2D42;   /* card + input borders */
+
+  /* text */
+  --text: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+
+  /* brand + accents */
+  --green: #2BAF34;
+  --green-light: #35D440;
+  --green-dark: #218928;
+  --green-ink: #04130A;     /* text on green */
+  --green-bg: rgba(43, 175, 52, 0.12);
+  --green-border: rgba(43, 175, 52, 0.30);
+  --blue: #3B82F6;
+  --yellow: #F59E0B;
+  --purple: #8B5CF6;
+  --orange: #F97316;
+  --red: #EF4444;
+  --cyan: #06B6D4;
+
+  /* shape */
+  --radius-sm: 8px;
+  --radius: 12px;           /* controls: buttons, inputs, pills */
+  --radius-lg: 16px;        /* cards, panels, modals */
+  --shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+  --shadow-green: 0 0 20px rgba(43, 175, 52, 0.25);
+
+  /* type */
+  --font: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* layout */
+  --sidebar-width: 256px;
+  --topbar-height: 64px;
+  --content-max: 1400px;
+  --content-gutter: 16px;
+
+  /* ---- legacy aliases: names used by older per-page stylesheets ----
+     They all resolve to the tokens above, so changing a token changes every page. */
+  --bg-secondary: var(--bg-2);
+  --surface-hover: var(--surface-2);
+  --card: var(--surface);
+  --inner: var(--bg-2);
+  --side: var(--bg-2);
+  --border: var(--line-strong);
+  --inner-border: var(--line);
+  --text2: var(--text-secondary);
+  --nav: var(--text-secondary);
+  --muted: var(--text-muted);
+  --sel-bg: var(--green-bg);
+  --sel-border: var(--green-dark);
+}
+@media (min-width: 640px)  { :root { --content-gutter: 24px; } }
+@media (min-width: 1024px) { :root { --content-gutter: 32px; } }
+
+/* ---------- 2. BASE ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    background: var(--bg);
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img { display: block; max-width: 100%; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  ::selection { background: var(--green); color: #000; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--green); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* ---------- 3. SHARED COMPONENTS (used by ui.jsx, Water, Sleep, modals...) ---------- */
+@layer components {
+  .card {
+    min-width: 0;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+  }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--text); }
+
+  .btn-primary,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: background-color .2s, border-color .2s, color .2s, transform .1s;
+  }
+  .btn-primary { background: var(--green); border: 1px solid var(--green); color: var(--green-ink); }
+  .btn-primary:hover { background: var(--green-light); border-color: var(--green-light); }
+  .btn-ghost { background: transparent; border: 1px solid var(--line-strong); color: var(--text-secondary); }
+  .btn-ghost:hover { border-color: var(--green); color: var(--text); }
+  .btn-primary:active, .btn-ghost:active { transform: scale(.97); }
+  .btn-primary:disabled, .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
+
+  .input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input::placeholder { color: var(--text-dim); }
+  .input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+  .label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+  /* brand mark: the one logo used in sidebar, auth pages and footers */
+  .fn-brand-mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    color: var(--green-ink);
+    box-shadow: 0 6px 18px rgba(43, 175, 52, 0.25);
+  }
+  .fn-brand-mark svg { fill: currentColor; }
+}
+
+/* ---------- 4. APP FRAME ---------- */
+.app-main {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 24px var(--content-gutter) 56px;
+}
+
+/* Page roots must not add their own padding / width / background on top of the frame. */
+.app-main .dash-page,
+.app-main .photo-page,
+.app-main .prog-page,
+.app-main .bs-page,
+.app-main .goal-page,
+.app-main .cal-page,
+.app-main .settings-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.app-main .fitnova-home,
+.app-main .fitnova-workout {
+  min-height: 0;
+  background: transparent;
+}
+.app-main .fitnova-home-container,
+.app-main .workout-container,
+.app-main .page-container {
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+.app-main .page-shell { min-height: calc(100vh - var(--topbar-height) - 80px); }
+.app-main .fitnova-footer { padding-inline: 0; }
+
+/* ---------- 5. PAGE CHROME  (same look on every page) ---------- */
+
+/* 5a. page header */
+.page-header,
+.app-main :is(.dash-header, .photo-header, .goal-header, .cal-header, .prog-header, .bs-header, .settings-header) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.page-title,
+.app-main :is(.dash-title, .photo-title, .goal-title, .cal-title, .prog-title, .bs-title, .settings-header h1) {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.page-subtitle,
+.app-main :is(.dash-sub, .photo-sub, .goal-subtitle, .cal-subtitle, .prog-sub, .bs-sub, .settings-header p:last-child) {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.page-eyebrow {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* 5b. cards */
+.app-main :is(.dash-card, .photo-card, .goal-card, .cal-card, .prog-card, .bs-card) {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+.app-main :is(.dash-card-title, .photo-card-title, .goal-card-title, .cal-card-title, .prog-card-title, .bs-card-title) {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+}
+.app-main :is(.dash-link, .photo-link, .goal-card-link, .cal-card-link, .prog-card-link, .bs-card-link) {
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 5c. primary + secondary buttons */
+.app-main :is(.dash-btn, .photo-btn, .goal-box--primary, .cal-box--primary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: var(--green);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  color: var(--green-ink);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color .2s, border-color .2s, transform .1s;
+}
+.app-main :is(.dash-btn, .photo-btn, .goal-box--primary, .cal-box--primary):hover {
+  background: var(--green-light);
+  border-color: var(--green-light);
+  filter: none;
+}
+.app-main :is(.dash-btn, .photo-btn, .goal-box--primary, .cal-box--primary):active { transform: scale(.97); }
+.app-main :is(.goal-box, .cal-box):not(.goal-box--primary):not(.cal-box--primary) {
+  border-radius: var(--radius);
+  border-color: var(--line-strong);
+  color: var(--text-secondary);
+}
+.app-main :is(.goal-box, .cal-box):not(.goal-box--primary):not(.cal-box--primary):hover {
+  border-color: var(--green);
+  color: var(--text);
+}
+
+/* 5d. tabs */
+.app-main :is(.photo-tab, .goal-tab, .cal-tab).is-active { color: var(--green); border-color: var(--green); }
+
+/* 5e. keyframes shared by pages */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: .8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+.animate-pulse-subtle { animation: pulseSubtle 3s infinite ease-in-out; }
+
+/* utilities used across pages */
+.bg-glass { background: rgba(13, 20, 28, .75); backdrop-filter: blur(12px); }
+.border-subtle { border: 1px solid rgba(255, 255, 255, .07); }
+.glow-green { box-shadow: 0 0 25px -4px rgba(43, 175, 52, .45); }
+.glow-green-sm { box-shadow: 0 0 12px 0 rgba(43, 175, 52, .35); }
+.text-gradient-green {
+  background: linear-gradient(135deg, #FFFFFF 30%, var(--green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.text-glow { text-shadow: 0 0 20px rgba(43, 175, 52, .4); }
+
+/* top bar content follows the same width + gutters as the page frame */
+.app-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: var(--topbar-height);
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--content-gutter);
+}
+
+/* "View All" style links are buttons: strip default button chrome, keep one hover style */
+.app-main :is(.dash-link, .photo-link, .goal-card-link, .cal-card-link, .prog-card-link, .bs-card-link) {
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.app-main :is(.dash-link, .photo-link, .goal-card-link, .cal-card-link, .prog-card-link, .bs-card-link):hover {
+  color: var(--green-light);
+  text-decoration: underline;
+}

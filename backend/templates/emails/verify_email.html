@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:40px;">
+
+<div style="max-width:600px;margin:auto;background:white;padding:30px;border-radius:8px;">
+
+<h2>Welcome to FitNova 🎉</h2>
+
+<p>Hi {{ user.first_name }},</p>
+
+<p>Thanks for registering.</p>
+
+<p>Please verify your email address by clicking the button below.</p>
+
+<p>
+    <a href="{{ verification_link }}"
+       style="background:#16a34a;color:white;padding:12px 24px;
+       text-decoration:none;border-radius:6px;">
+        Verify Email
+    </a>
+</p>
+
+<p>If you didn't create this account, simply ignore this email.</p>
+
+<hr>
+
+<p>Team FitNova</p>
+
+</div>
+
+</body>
+</html>

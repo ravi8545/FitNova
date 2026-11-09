@@ -1,0 +1,67 @@
+.fitnova-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 25px max(var(--page-gutter), calc((100% - var(--page-max)) / 2));
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+.fitnova-footer .footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 800;
+}
+.fitnova-footer .footer-brand-icon {
+  display: inline-flex;
+}
+.fitnova-footer > p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.fitnova-footer .footer-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.fitnova-footer .footer-links a {
+  color: var(--text-secondary);
+  font-size: 11px;
+  transition: color 0.2s ease;
+}
+.fitnova-footer .footer-links a:hover {
+  color: var(--green);
+}
+.fitnova-footer .footer-copyright {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+@media (max-width: 768px) {
+  .fitnova-footer {
+    justify-content: center;
+    text-align: center;
+  }
+}
+@media (max-width: 480px) {
+  .fitnova-footer {
+    flex-direction: column;
+    gap: 14px;
+    padding: 25px 16px;
+  }
+  .fitnova-footer .footer-links {
+    justify-content: center;
+    gap: 12px 16px;
+  }
+}
+
+/* beat the older footer rules inside Home.css so all pages match */
+.app-content .fitnova-home .fitnova-footer {
+  padding-inline: max(var(--page-gutter), calc((100% - var(--page-max)) / 2));
+}

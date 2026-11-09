@@ -1,0 +1,285 @@
+/* =========================================================
+   FITNOVA SETTINGS PAGE
+   Uses the shared design tokens from styles/index.css.
+   Page chrome (header, title, eyebrow) comes from the shared
+   page-chrome rules; this file only styles Settings-specific parts.
+   All rules are scoped to .settings-page so nothing leaks to other pages.
+========================================================= */
+
+.settings-page {
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+}
+.settings-page *,
+.settings-page *::before,
+.settings-page *::after { box-sizing: border-box; }
+.settings-page h1,
+.settings-page h2,
+.settings-page h4,
+.settings-page p { margin: 0; }
+
+.settings-layout { display: block; }
+.settings-main { min-width: 0; }
+
+.settings-header .header-avatar,
+.settings-page .profile-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: 50%;
+  color: var(--green);
+  font-weight: 800;
+}
+.settings-page .profile-avatar {
+  width: 68px;
+  height: 68px;
+  margin-bottom: 24px;
+  font-size: 28px;
+}
+
+/* Hero banner */
+.gym-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 220px;
+  overflow: hidden;
+  padding: 32px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background-image:
+    linear-gradient(90deg, rgba(9, 13, 22, 0.92), rgba(9, 13, 22, 0.35)),
+    url("https://images.pexels.com/photos/37273484/pexels-photo-37273484.jpeg");
+  background-position: center 35%;
+  background-size: cover;
+  color: var(--text);
+}
+.gym-banner-content { position: relative; max-width: 470px; }
+.banner-label {
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+}
+.gym-banner h2 {
+  margin: 12px 0 10px;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.gym-banner p { color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+
+/* Main settings card */
+.settings-content {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+}
+.settings-content > h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+.settings-content > p { margin-top: 4px; color: var(--text-muted); line-height: 1.6; }
+
+/* Tabs */
+.settings-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 20px 0 22px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line-strong);
+}
+.settings-tabs button {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: color .2s, border-color .2s;
+}
+.settings-tabs button:hover { color: var(--text); }
+.settings-tabs button.selected { border-bottom-color: var(--green); color: var(--green); }
+
+/* Layout of panels */
+.settings-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: start;
+  gap: 20px;
+}
+.settings-right-column { display: grid; gap: 20px; min-width: 0; }
+.settings-panel {
+  min-width: 0;
+  padding: 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+}
+.settings-panel h2 { margin: 0 0 16px; font-size: 16px; font-weight: 700; }
+.full-panel { width: 100%; }
+
+/* Rows */
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.setting-row:last-child { margin-bottom: 0; }
+.setting-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  background: var(--green-bg);
+  border-radius: var(--radius);
+  font-size: 17px;
+}
+.setting-info { flex: 1; min-width: 0; }
+.setting-info h4 { margin: 0 0 3px; font-size: 13px; font-weight: 600; }
+.setting-info p { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.setting-control { display: flex; flex-shrink: 0; align-items: center; justify-content: flex-end; gap: 8px; }
+
+/* Inputs (same look as the global .input) */
+.setting-control select,
+.settings-form select,
+.settings-form input,
+.small-number-input {
+  padding: 9px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.setting-control select { max-width: 130px; cursor: pointer; }
+.small-number-input { width: 88px; }
+.settings-form input,
+.settings-form select { width: 100%; min-height: 42px; }
+.settings-page :is(select, input):focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green);
+}
+
+/* Toggle */
+.setting-toggle {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: 42px;
+  height: 24px;
+  padding: 3px;
+  background: var(--line-strong);
+  border: 0;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background .2s;
+}
+.setting-toggle span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  transition: transform .2s;
+}
+.setting-toggle.active { background: var(--green); }
+.setting-toggle.active span { transform: translateX(18px); }
+
+/* Action rows */
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+.action-row:hover { background: var(--surface-2); }
+.action-arrow { margin-left: auto; color: var(--text-muted); font-size: 22px; }
+.danger-action { color: var(--red); }
+
+/* Buttons (same as .btn-primary) */
+.other-actions { display: flex; gap: 10px; }
+.other-actions button,
+.save-button {
+  padding: 10px 18px;
+  background: var(--green);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  color: var(--green-ink);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color .2s, border-color .2s, transform .1s;
+}
+.other-actions button { flex: 1; }
+.other-actions button:hover,
+.save-button:hover { background: var(--green-light); border-color: var(--green-light); }
+.other-actions button:active,
+.save-button:active { transform: scale(.97); }
+.save-button { min-width: 140px; }
+
+/* Profile form */
+.settings-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.settings-form h2 { grid-column: 1 / -1; margin: 12px 0 0; color: var(--text); }
+
+/* Footer / status */
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 22px;
+}
+.settings-footer p { color: var(--green); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .settings-columns { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .gym-banner { min-height: 200px; padding: 22px; }
+  .settings-content { padding: 16px; }
+  .settings-tabs button { padding: 11px 13px; font-size: 13px; }
+  .settings-panel { padding: 14px; }
+  .setting-row { gap: 8px; padding: 10px; }
+  .setting-icon { width: 32px; height: 32px; font-size: 14px; }
+  .setting-control select { max-width: 96px; padding: 7px 8px; font-size: 12px; }
+  .settings-form { grid-template-columns: 1fr; }
+  .other-actions { flex-direction: column; }
+  .settings-footer { align-items: stretch; flex-direction: column; }
+  .save-button { width: 100%; }
+}
