@@ -18,24 +18,25 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--username',
+            '--email',
             type=str,
-            default='demo_user',
-            help='Username of the target demo user account (default: demo_user)'
+            default='ravi@fitnova.com',
+            help='Email of the target user account (default: ravi@fitnova.com)'
         )
 
     def handle(self, *args, **options):
-        target_username = options['username']
-        self.stdout.write(f"Preparing seed records for demo user: {target_username}")
+        target_email = options.get('email', 'ravi@fitnova.com')
+        self.stdout.write(f"Preparing seed records for user: {target_email}")
 
-        user = User.objects.filter(username=target_username).first()
+        user = User.objects.filter(email=target_email).first()
         if not user:
             user = User.objects.create_user(
-                username=target_username,
-                email=f'{target_username}@fitnova.com',
+                email=target_email,
+                first_name='Ravi',
+                last_name='Kumar',
                 password='Password123!'
             )
-            self.stdout.write(self.style.SUCCESS(f"Created demo account: {target_username}"))
+            self.stdout.write(self.style.SUCCESS(f"Created account: {target_email}"))
 
         today = timezone.localdate()
 
@@ -76,7 +77,7 @@ class Command(BaseCommand):
             if created:
                 created_logs += 1
 
-        self.stdout.write(f"Updated or created {len(sample_logs)} daily logs for {target_username}.")
+        self.stdout.write(f"Updated or created {len(sample_logs)} daily logs for {target_email}.")
 
         # Report Goals
         goals = [
@@ -116,4 +117,4 @@ class Command(BaseCommand):
             }
         )
 
-        self.stdout.write(self.style.SUCCESS(f"Successfully seeded development records for demo user '{target_username}'!"))
+        self.stdout.write(self.style.SUCCESS(f"Successfully seeded development records for demo user '{target_email}'!"))

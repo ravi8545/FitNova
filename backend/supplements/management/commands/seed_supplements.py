@@ -19,9 +19,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # 1. Ensure demo user exists
         demo_user, created = User.objects.get_or_create(
-            username='demo_user',
+            email='demo@fitnova.com',
             defaults={
-                'email': 'demo@fitnova.com',
                 'first_name': 'Demo',
                 'last_name': 'Athlete',
             }
