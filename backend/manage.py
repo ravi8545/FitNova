@@ -50,8 +50,11 @@ def check_db_and_print_banner():
             except Exception as e:
                 border = "!" * 74
                 print("\n" + border, flush=True)
-                print("  [DATABASE CONNECTION ERROR]", flush=True)
-                print(f"  Failed to connect to database: {e}", flush=True)
+                print("  [DATABASE CONNECTION NOTICE]", flush=True)
+                print("  Target Database: MySQL (fitnova @ 127.0.0.1:3306)", flush=True)
+                print(f"  Connection Status: {e}", flush=True)
+                print("  Please ensure MySQL service is running and 'fitnova' database is created.", flush=True)
+                print("  Run: CREATE DATABASE fitnova CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;", flush=True)
                 print(border + "\n", flush=True)
 
 

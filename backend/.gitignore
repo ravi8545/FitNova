@@ -1,0 +1,22 @@
+# Environment variables
+# .env
+# .env.*
+# !.env.example
+
+# SQLite Databases
+*.sqlite3
+*.sqlite3-journal
+
+# Python Byte-compiled
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Media files
+media/
+staticfiles/
+
+# Virtual Environment
+env/
+venv/
+
