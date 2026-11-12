@@ -94,27 +94,34 @@ export default function ReportsPage() {
     setRecentActivity(result.recentActivity || []);
   };
 
-  // Fetch report data on mount and whenever selectedPeriod or activeTab changes
-  const loadReport = useCallback(async () => {
+  // Fetch report data on mount and whenever selectedPeriod or activeTab changes with AbortController to prevent race conditions
+  const loadReport = useCallback((signal) => {
     setApiStatus('loading');
     setApiError(null);
-    const result = await fetchAnalyticsReport(selectedPeriod, activeTab);
-
-    if (result.isLive) {
-      setApiStatus('live');
-      applyReportData(result);
-    } else {
-      setApiStatus('error');
-      setApiError(result.error);
-      applyReportData(result);
-    }
+    fetchAnalyticsReport(selectedPeriod, activeTab, signal)
+      .then((result) => {
+        if (result.isLive) {
+          setApiStatus('live');
+          applyReportData(result);
+        } else {
+          setApiStatus('error');
+          setApiError(result.error);
+          applyReportData(result);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          setApiStatus('error');
+          setApiError(err.message || 'Error loading report.');
+        }
+      });
   }, [selectedPeriod, activeTab]);
 
   useEffect(() => {
-    let cancelled = false;
-    loadReport();
+    const controller = new AbortController();
+    loadReport(controller.signal);
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [loadReport]);
 

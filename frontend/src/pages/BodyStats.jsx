@@ -216,7 +216,7 @@ export default function BodyStatsPage() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [formError, setFormError] = useState('');
 
-	const todayStr = new Date().toISOString().split('T')[0];
+	const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
 	const [measForm, setMeasForm] = useState({
 		date: todayStr,
 		weight: '',
@@ -552,10 +552,14 @@ export default function BodyStatsPage() {
 												<div>
 													<small>{m.name}</small>
 													<b>
-														{m.value} {m.unit}
+														{m.value && m.value > 0 ? `${m.value} ${m.unit}` : 'Unavailable'}
 													</b>
 												</div>
-												<Delta value={m.delta} unit={m.unit} goodWhenDown={m.name !== 'Arms'} />
+												{m.value && m.value > 0 ? (
+													<Delta value={m.delta} unit={m.unit} goodWhenDown={m.name !== 'Arms'} />
+												) : (
+													<span style={{ fontSize: 11, color: 'var(--muted)' }}>No data</span>
+												)}
 											</li>
 										);
 									})}
@@ -606,6 +610,11 @@ export default function BodyStatsPage() {
 										</li>
 									))}
 								</ul>
+								{d.composition?.method && (
+									<div style={{ width: '100%', marginTop: 10, paddingTop: 8, borderTop: '1px solid #1E2D42', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
+										ℹ️ {d.composition.method}
+									</div>
+								)}
 							</div>
 						</div>
 

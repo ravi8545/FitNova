@@ -68,13 +68,15 @@ def stats_overview(request):
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def stats_trends(request):
-    """Returns weight trend points for 7d, 30d, 90d."""
-    range_param = request.query_params.get("range", "30d").lower().replace("d", "")
-    days = 30
-    try:
-        days = int(range_param)
-    except ValueError:
-        pass
+    """Returns weight trend points strictly validated for 7d, 30d, 90d."""
+    raw_range = request.query_params.get("range", "30d").lower()
+    allowed_ranges = {"7d": 7, "30d": 30, "90d": 90, "7": 7, "30": 30, "90": 90}
+    if raw_range not in allowed_ranges:
+        return Response(
+            {"detail": "Invalid range parameter. Allowed values are '7d', '30d', or '90d'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    days = allowed_ranges[raw_range]
 
     measurements = list(BodyMeasurement.objects.filter(user=request.user).order_by("-date", "-created_at"))
     trend = _build_trend(measurements, days)

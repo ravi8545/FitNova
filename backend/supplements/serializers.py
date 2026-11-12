@@ -110,6 +110,13 @@ class SupplementReminderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Reminder time is required.")
         return value.strip()
 
+    def validate_stack_item(self, value):
+        if value:
+            user = get_request_user(self.context)
+            if user and value.user != user:
+                raise serializers.ValidationError("You cannot link a reminder to another user's stack item.")
+        return value
+
     def create(self, validated_data):
         user = validated_data.get('user') or get_request_user(self.context)
         if user:
@@ -122,6 +129,13 @@ class SupplementDailyLogSerializer(serializers.ModelSerializer):
         model = SupplementDailyLog
         fields = ('id', 'stack_item', 'date', 'is_taken', 'taken_at')
         read_only_fields = ('id', 'taken_at')
+
+    def validate_stack_item(self, value):
+        if value:
+            user = get_request_user(self.context)
+            if user and value.user != user:
+                raise serializers.ValidationError("You cannot log intake for another user's stack item.")
+        return value
 
     def create(self, validated_data):
         user = validated_data.get('user') or get_request_user(self.context)
@@ -203,18 +217,21 @@ class SupplementCartItemSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        from django.db import transaction
         request = self.context.get('request')
         user = validated_data.get('user') or (request.user if request and request.user.is_authenticated else None)
+        if not user:
+            raise serializers.ValidationError({"detail": "Authentication required."})
         product = validated_data['product']
         quantity = validated_data.get('quantity', 1)
 
-        # Increment quantity if item already in cart
-        cart_item, created = SupplementCartItem.objects.get_or_create(
-            user=user,
-            product=product,
-            defaults={'quantity': quantity}
-        )
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save(update_fields=['quantity'])
+        with transaction.atomic():
+            cart_item, created = SupplementCartItem.objects.select_for_update().get_or_create(
+                user=user,
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save(update_fields=['quantity'])
         return cart_item

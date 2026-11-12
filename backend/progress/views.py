@@ -64,10 +64,21 @@ class WorkoutLogViewSet(viewsets.ModelViewSet):
 
         existing = WorkoutLog.objects.filter(user=request.user, date=w_date).first()
         if existing:
-            update_serializer = self.get_serializer(existing, data=request.data, partial=True)
-            update_serializer.is_valid(raise_exception=True)
-            update_serializer.save()
-            return Response(update_serializer.data, status=status.HTTP_200_OK)
+            new_vol = serializer.validated_data.get("volume", 0)
+            new_dist = serializer.validated_data.get("distance")
+            new_pace = serializer.validated_data.get("pace")
+            new_dur = serializer.validated_data.get("duration_minutes", 0)
+
+            # Cumulative update for same-day sessions if volume or distance provided
+            existing.volume = (existing.volume or 0) + new_vol
+            if new_dist is not None:
+                existing.distance = (existing.distance or 0) + new_dist
+            if new_pace is not None:
+                existing.pace = new_pace
+            if new_dur:
+                existing.duration_minutes = (existing.duration_minutes or 0) + new_dur
+            existing.save()
+            return Response(self.get_serializer(existing).data, status=status.HTTP_200_OK)
 
         serializer.save(user=request.user)
         headers = self.get_success_headers(serializer.data)

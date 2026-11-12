@@ -226,8 +226,11 @@ def get_body_stats_overview(user):
     muscle_pct_round = round((muscle_kg / total_wt) * 100) if total_wt > 0 else 0
     other_pct_round = max(0, 100 - fat_pct_round - muscle_pct_round)
 
+    is_measured = bool(latest.body_fat is not None and latest.muscle is not None)
     composition = {
         "total": total_wt,
+        "isMeasured": is_measured,
+        "method": "Direct measured inputs" if is_measured else "Estimated breakdown based on recorded weight",
         "parts": [
             {"name": "Muscle Mass", "kg": muscle_kg, "pct": muscle_pct_round, "color": GREEN},
             {"name": "Fat Mass", "kg": fat_kg, "pct": fat_pct_round, "color": BLUE},
@@ -235,7 +238,7 @@ def get_body_stats_overview(user):
         ],
     }
 
-    # Summary goals calculation
+    # Summary goals calculation with goal-direction awareness
     summary_goals = []
     goal_keys = [
         ("weight", "Weight Goal", GREEN),
@@ -250,15 +253,26 @@ def get_body_stats_overview(user):
         val = float(raw_val) if raw_val is not None else 0.0
         u = STAT_UNIT[k]
         if g:
-            diff = abs(float(g.goal) - float(g.start))
-            achieved = abs(val - float(g.start))
-            pct = min(100, max(0, round((achieved / diff) * 100))) if diff > 0 else 100
+            start_num = float(g.start)
+            goal_num = float(g.goal)
+            total_dist = abs(goal_num - start_num)
+            if total_dist == 0:
+                pct = 100
+            else:
+                if start_num > goal_num:
+                    # Target is reduction (e.g. weight loss 85kg -> 75kg)
+                    achieved = start_num - val
+                else:
+                    # Target is increase (e.g. muscle mass 58kg -> 65kg)
+                    achieved = val - start_num
+                pct = min(100, max(0, round((achieved / total_dist) * 100)))
+
             pct_list.append(pct)
             summary_goals.append({
                 "name": name,
                 "icon": k,
                 "color": col,
-                "text": f"{val} {u} of {g.goal} {u} target".replace("  ", " "),
+                "text": f"{val} {u} of {goal_num} {u} target".replace("  ", " "),
                 "pct": pct,
             })
     overall_pct = round(sum(pct_list) / len(pct_list)) if pct_list else 75

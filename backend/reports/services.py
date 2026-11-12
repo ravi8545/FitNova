@@ -393,63 +393,97 @@ class AnalyticsService:
                 {'label': 'Streak Days', 'value': f"{streak_days} days", 'change': f"{streak_days}d streak", 'positive': streak_days > 0},
                 {'label': 'Active Reminders', 'value': f"{reminders_active}", 'change': 'Configured', 'positive': True},
             ]
-        elif normalized_tab == 'body-stats':
-            weight_logs = [log for log in logs if log.weight_kg is not None]
-            muscle_logs = [log for log in logs if log.muscle_mass_pct is not None]
-            fat_logs = [log for log in logs if log.body_fat_pct is not None]
+        elif normalized_tab in ('body', 'body-stats'):
+            from stats.models import BodyMeasurement, BodyGoal
+            from profiles.models import Profile
 
-            prev_weight_logs = [log for log in prev_logs if log.weight_kg is not None]
-            prev_fat_logs = [log for log in prev_logs if log.body_fat_pct is not None]
+            # Query canonical BodyMeasurement records first
+            meas_qs = list(BodyMeasurement.objects.filter(user=user, date__range=[start_date, end_date]).order_by('date'))
+            prev_meas_qs = list(BodyMeasurement.objects.filter(user=user, date__range=[prev_start_date, prev_end_date]).order_by('date'))
 
-            latest_weight = float(weight_logs[-1].weight_kg) if weight_logs else None
-            latest_muscle = float(muscle_logs[-1].muscle_mass_pct) if muscle_logs else None
-            latest_fat = float(fat_logs[-1].body_fat_pct) if fat_logs else None
+            weight_goal = BodyGoal.objects.filter(user=user, key='weight').first()
+            fat_goal = BodyGoal.objects.filter(user=user, key='fat').first()
+            muscle_goal = BodyGoal.objects.filter(user=user, key='muscle').first()
+            profile = getattr(user, 'profile', None)
 
-            prev_weight = float(prev_weight_logs[-1].weight_kg) if prev_weight_logs else None
-            prev_fat = float(prev_fat_logs[-1].body_fat_pct) if prev_fat_logs else None
+            target_weight_str = f"{float(weight_goal.goal)} kg" if weight_goal else (f"{float(profile.target_weight)} kg" if profile and profile.target_weight else "75.0 kg")
+            target_fat_str = f"{float(fat_goal.goal)}%" if fat_goal else "15.0%"
+            target_muscle_str = f"{float(muscle_goal.goal)} kg" if (muscle_goal and muscle_goal.unit == 'kg') else (f"{float(muscle_goal.goal)}%" if muscle_goal else "45.0%")
 
-            weight_trend = calculate_trend(latest_weight, prev_weight, bool(prev_weight_logs), higher_is_better=False, unit=" kg") if latest_weight is not None else (None, True, "No previous data", None)
-            fat_trend = calculate_trend(latest_fat, prev_fat, bool(prev_fat_logs), higher_is_better=False, unit="%") if latest_fat is not None else (None, True, "No previous data", None)
+            if meas_qs:
+                latest_m = meas_qs[-1]
+                latest_weight = float(latest_m.weight)
+                latest_muscle = float(latest_m.muscle) if latest_m.muscle is not None else None
+                latest_fat = float(latest_m.body_fat) if latest_m.body_fat is not None else None
+                spark_weights = [float(m.weight) for m in meas_qs][-7:]
+                spark_fats = [float(m.body_fat) for m in meas_qs if m.body_fat is not None][-7:]
+                spark_muscles = [float(m.muscle) for m in meas_qs if m.muscle is not None][-7:]
+
+                prev_weight = float(prev_meas_qs[-1].weight) if prev_meas_qs else None
+                prev_fat = float(prev_meas_qs[-1].body_fat) if prev_meas_qs and prev_meas_qs[-1].body_fat is not None else None
+                prev_muscle = float(prev_meas_qs[-1].muscle) if prev_meas_qs and prev_meas_qs[-1].muscle is not None else None
+            else:
+                weight_logs = [log for log in logs if log.weight_kg is not None]
+                muscle_logs = [log for log in logs if log.muscle_mass_pct is not None]
+                fat_logs = [log for log in logs if log.body_fat_pct is not None]
+
+                prev_weight_logs = [log for log in prev_logs if log.weight_kg is not None]
+                prev_fat_logs = [log for log in prev_logs if log.body_fat_pct is not None]
+
+                latest_weight = float(weight_logs[-1].weight_kg) if weight_logs else None
+                latest_muscle = float(muscle_logs[-1].muscle_mass_pct) if muscle_logs else None
+                latest_fat = float(fat_logs[-1].body_fat_pct) if fat_logs else None
+                spark_weights = [float(log.weight_kg) for log in weight_logs][-7:]
+                spark_fats = [float(log.body_fat_pct) for log in fat_logs][-7:]
+                spark_muscles = [float(log.muscle_mass_pct) for log in muscle_logs][-7:]
+
+                prev_weight = float(prev_weight_logs[-1].weight_kg) if prev_weight_logs else None
+                prev_fat = float(prev_fat_logs[-1].body_fat_pct) if prev_fat_logs else None
+                prev_muscle = None
+
+            weight_trend = calculate_trend(latest_weight, prev_weight, bool(prev_weight is not None), higher_is_better=False, unit=" kg") if latest_weight is not None else (None, True, "No previous data", None)
+            fat_trend = calculate_trend(latest_fat, prev_fat, bool(prev_fat is not None), higher_is_better=False, unit="%") if latest_fat is not None else (None, True, "No previous data", None)
+            muscle_trend = calculate_trend(latest_muscle, prev_muscle, bool(prev_muscle is not None), higher_is_better=True, unit=" kg") if latest_muscle is not None else (None, True, "No previous data", None)
 
             kpi_metrics = [
                 {
                     'id': 'kpi-weight',
                     'title': 'Current Weight',
                     'value': f"{latest_weight} kg" if latest_weight is not None else "--",
-                    'target': '75 kg',
+                    'target': target_weight_str,
                     'change': weight_trend[0],
                     'isPositive': weight_trend[1],
                     'comparisonText': weight_trend[2],
                     'type': 'weight',
-                    'sparklineData': [float(log.weight_kg) for log in weight_logs][-7:],
+                    'sparklineData': spark_weights,
                 },
                 {
                     'id': 'kpi-muscle',
                     'title': 'Muscle Mass',
-                    'value': f"{latest_muscle}%" if latest_muscle is not None else "--",
-                    'target': '45%',
-                    'change': None,
-                    'isPositive': True,
-                    'comparisonText': 'body composition target',
+                    'value': f"{latest_muscle} kg" if latest_muscle is not None else "--",
+                    'target': target_muscle_str,
+                    'change': muscle_trend[0],
+                    'isPositive': muscle_trend[1],
+                    'comparisonText': muscle_trend[2],
                     'type': 'body',
-                    'sparklineData': [float(log.muscle_mass_pct) for log in muscle_logs][-7:],
+                    'sparklineData': spark_muscles,
                 },
                 {
                     'id': 'kpi-body-fat',
                     'title': 'Body Fat',
                     'value': f"{latest_fat}%" if latest_fat is not None else "--",
-                    'target': '15%',
+                    'target': target_fat_str,
                     'change': fat_trend[0],
                     'isPositive': fat_trend[1],
                     'comparisonText': fat_trend[2],
                     'type': 'body',
-                    'sparklineData': [float(log.body_fat_pct) for log in fat_logs][-7:],
+                    'sparklineData': spark_fats,
                 },
             ]
             report_summary = [
-                {'label': 'Current Weight', 'value': f"{latest_weight} kg" if latest_weight is not None else "No data", 'change': weight_trend[0] or "Latest", 'positive': weight_trend[1]},
-                {'label': 'Muscle Mass', 'value': f"{latest_muscle}%" if latest_muscle is not None else "No data", 'change': 'Target: 45%', 'positive': True},
-                {'label': 'Body Fat', 'value': f"{latest_fat}%" if latest_fat is not None else "No data", 'change': fat_trend[0] or "Target: 15%", 'positive': fat_trend[1]},
+                {'label': 'Current Weight', 'value': f"{latest_weight} kg" if latest_weight is not None else "No data", 'change': weight_trend[0] or f"Target: {target_weight_str}", 'positive': weight_trend[1]},
+                {'label': 'Muscle Mass', 'value': f"{latest_muscle} kg" if latest_muscle is not None else "No data", 'change': muscle_trend[0] or f"Target: {target_muscle_str}", 'positive': muscle_trend[1]},
+                {'label': 'Body Fat', 'value': f"{latest_fat}%" if latest_fat is not None else "No data", 'change': fat_trend[0] or f"Target: {target_fat_str}", 'positive': fat_trend[1]},
             ]
         else:
             # Default 'overview' tab
@@ -558,10 +592,12 @@ class AnalyticsService:
             ]
         }
 
-        weight_logs = [log for log in logs if log.weight_kg is not None]
-        if weight_logs:
-            current_weight = float(weight_logs[-1].weight_kg)
-            first_weight = float(weight_logs[0].weight_kg)
+        from stats.models import BodyMeasurement
+        canonical_meas = list(BodyMeasurement.objects.filter(user=user, date__range=[start_date, end_date]).order_by('date'))
+
+        if canonical_meas:
+            current_weight = float(canonical_meas[-1].weight)
+            first_weight = float(canonical_meas[0].weight)
             diff = round(current_weight - first_weight, 1)
             weight_progress = {
                 'currentWeight': f"{current_weight} kg",
@@ -569,30 +605,58 @@ class AnalyticsService:
                 'comparison': 'in this period',
                 'data': [
                     {
-                        'day': format_day(log.date),
-                        'weight': float(log.weight_kg)
+                        'day': format_day(m.date),
+                        'weight': float(m.weight)
                     }
-                    for log in weight_logs
+                    for m in canonical_meas
                 ]
             }
+            body_composition = [
+                {
+                    'day': format_day(m.date),
+                    'muscle': float(m.muscle) if m.muscle is not None else 0.0,
+                    'fat': float(m.body_fat) if m.body_fat is not None else 0.0,
+                    'water': 0.0,
+                }
+                for m in canonical_meas
+                if (m.muscle is not None or m.body_fat is not None)
+            ]
         else:
-            weight_progress = {
-                'currentWeight': None,
-                'change': '0 kg',
-                'comparison': 'no recorded weight',
-                'data': []
-            }
+            weight_logs = [log for log in logs if log.weight_kg is not None]
+            if weight_logs:
+                current_weight = float(weight_logs[-1].weight_kg)
+                first_weight = float(weight_logs[0].weight_kg)
+                diff = round(current_weight - first_weight, 1)
+                weight_progress = {
+                    'currentWeight': f"{current_weight} kg",
+                    'change': f"{'+' if diff > 0 else ''}{diff} kg",
+                    'comparison': 'in this period',
+                    'data': [
+                        {
+                            'day': format_day(log.date),
+                            'weight': float(log.weight_kg)
+                        }
+                        for log in weight_logs
+                    ]
+                }
+            else:
+                weight_progress = {
+                    'currentWeight': None,
+                    'change': '0 kg',
+                    'comparison': 'no recorded weight',
+                    'data': []
+                }
 
-        body_composition = [
-            {
-                'day': format_day(log.date),
-                'muscle': float(log.muscle_mass_pct) if log.muscle_mass_pct is not None else 0.0,
-                'fat': float(log.body_fat_pct) if log.body_fat_pct is not None else 0.0,
-                'water': float(log.water_pct) if log.water_pct is not None else 0.0,
-            }
-            for log in logs
-            if (log.muscle_mass_pct is not None or log.body_fat_pct is not None or log.water_pct is not None)
-        ]
+            body_composition = [
+                {
+                    'day': format_day(log.date),
+                    'muscle': float(log.muscle_mass_pct) if log.muscle_mass_pct is not None else 0.0,
+                    'fat': float(log.body_fat_pct) if log.body_fat_pct is not None else 0.0,
+                    'water': float(log.water_pct) if log.water_pct is not None else 0.0,
+                }
+                for log in logs
+                if (log.muscle_mass_pct is not None or log.body_fat_pct is not None or log.water_pct is not None)
+            ]
 
         top_days = []
         if has_logs:

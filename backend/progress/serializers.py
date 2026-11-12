@@ -70,6 +70,16 @@ class ProgressPhotoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Only valid image files (JPEG, PNG, WebP) are allowed.")
         return value
 
+    def validate_date(self, value):
+        if value > timezone.localdate():
+            raise serializers.ValidationError("Photo date cannot be in the future.")
+        return value
+
+    def validate_weight(self, value):
+        if value is not None and (value < Decimal("20.0") or value > Decimal("500.0")):
+            raise serializers.ValidationError("Weight must be between 20 kg and 500 kg.")
+        return value
+
 
 class WorkoutLogSerializer(serializers.ModelSerializer):
     volume = serializers.IntegerField(required=False, default=0, min_value=0)

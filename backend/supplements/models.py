@@ -114,6 +114,9 @@ class UserSupplementStack(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.user})"
@@ -164,6 +167,9 @@ class SupplementDailyLog(models.Model):
     class Meta:
         unique_together = ('user', 'stack_item', 'date')
         ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+        ]
 
 
 class SupplementGoal(models.Model):

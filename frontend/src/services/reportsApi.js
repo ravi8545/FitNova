@@ -18,9 +18,9 @@ import {
  * @param {string} period '7d' | '30d' | '3m' | '1y'
  * @param {string} tab 'overview' | 'nutrition' | 'workouts' | 'body-stats' | 'water-intake' | 'sleep' | 'supplements'
  */
-export async function fetchAnalyticsReport(period = '7d', tab = 'overview') {
+export async function fetchAnalyticsReport(period = '7d', tab = 'overview', signal = null) {
   try {
-    const data = await apiClient(`/reports/analytics/?period=${period}&tab=${tab}`);
+    const data = await apiClient(`/reports/analytics/?period=${period}&tab=${tab}`, { signal });
     return {
       isLive: true,
       error: null,

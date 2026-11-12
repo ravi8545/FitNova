@@ -246,7 +246,7 @@ export default function ProgressPage() {
 	const [formError, setFormError] = useState('');
 
 	// Milestone form
-	const todayStr = new Date().toISOString().split('T')[0];
+	const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
 	const [msForm, setMsForm] = useState({
 		title: '',
 		date: todayStr,
@@ -262,6 +262,7 @@ export default function ProgressPage() {
 		category: 'Progress',
 		date: todayStr,
 		imageFile: null,
+		previewUrl: '',
 		src: '',
 		notes: '',
 	});
@@ -269,6 +270,24 @@ export default function ProgressPage() {
 	// Compare selector
 	const [compareA, setCompareA] = useState(0);
 	const [compareB, setCompareB] = useState(1);
+
+	const openCompareModal = () => {
+		const list = data?.photos || [];
+		if (list.length >= 2) {
+			setCompareA(list.length - 1);
+			setCompareB(0);
+		} else {
+			setCompareA(0);
+			setCompareB(0);
+		}
+		setModalMode('compare');
+	};
+
+	const closePhotoModal = () => {
+		if (photoForm.previewUrl) URL.revokeObjectURL(photoForm.previewUrl);
+		setPhotoForm({ label: '', weight: '', category: 'Progress', date: todayStr, imageFile: null, previewUrl: '', src: '', notes: '' });
+		setModalMode(null);
+	};
 
 	// Workout log form
 	const [workForm, setWorkForm] = useState({
@@ -319,7 +338,7 @@ export default function ProgressPage() {
 				showToast('Progress summary generated!');
 			}
 		} else if (key === 'compare') {
-			setModalMode('compare');
+			openCompareModal();
 		} else if (key === 'milestones') {
 			setMsForm({
 				title: '',
@@ -416,6 +435,17 @@ export default function ProgressPage() {
 			}
 
 			showToast('Progress photo added!');
+			if (photoForm.previewUrl) URL.revokeObjectURL(photoForm.previewUrl);
+			setPhotoForm({
+				label: '',
+				weight: '',
+				category: 'Progress',
+				date: todayStr,
+				imageFile: null,
+				previewUrl: '',
+				src: '',
+				notes: '',
+			});
 			setModalMode(null);
 			await loadData();
 		} catch (err) {
@@ -707,14 +737,15 @@ export default function ProgressPage() {
 								title="Visual Progression"
 								actionLabel="Upload"
 								onAction={() => {
-									setPhotoForm({ label: '', weight: '', category: 'Progress', date: todayStr, imageFile: null, src: '', notes: '' });
+									if (photoForm.previewUrl) URL.revokeObjectURL(photoForm.previewUrl);
+									setPhotoForm({ label: '', weight: '', category: 'Progress', date: todayStr, imageFile: null, previewUrl: '', src: '', notes: '' });
 									setFormError('');
 									setModalMode('photo');
 								}}
 							/>
-							<div className="prog-ba" onClick={() => setModalMode('compare')} style={{ cursor: 'pointer' }}>
-								<Photo p={firstPhoto} className="prog-ba-img" />
+							<div className="prog-ba" onClick={openCompareModal} style={{ cursor: 'pointer' }}>
 								<Photo p={lastPhoto} className="prog-ba-img" />
+								<Photo p={firstPhoto} className="prog-ba-img" />
 								<span className="prog-ba-label">Before / After Comparison (Click to View)</span>
 							</div>
 
@@ -722,7 +753,7 @@ export default function ProgressPage() {
 								<h4>Photos Timeline</h4>
 								<button
 									className="prog-outline-btn"
-									onClick={() => setModalMode('compare')}
+									onClick={openCompareModal}
 								>
 									Compare Photos
 								</button>
@@ -758,7 +789,7 @@ export default function ProgressPage() {
 
 							<button
 								className="prog-wide-btn"
-								onClick={() => setModalMode('compare')}
+								onClick={openCompareModal}
 							>
 								Compare Photos Tool
 							</button>
@@ -930,13 +961,13 @@ export default function ProgressPage() {
 			)}
 
 			{modalMode === 'photo' && (
-				<div className="prog-modal-overlay" onClick={() => setModalMode(null)}>
+				<div className="prog-modal-overlay" onClick={closePhotoModal}>
 					<div className="prog-modal" onClick={(e) => e.stopPropagation()}>
 						<div className="prog-modal-head">
 							<h3>
 								<Camera size={20} color="var(--green)" /> Add Progress Photo
 							</h3>
-							<button className="prog-modal-close" onClick={() => setModalMode(null)}>
+							<button className="prog-modal-close" onClick={closePhotoModal}>
 								<X size={18} />
 							</button>
 						</div>
@@ -999,10 +1030,35 @@ export default function ProgressPage() {
 										accept="image/*"
 										onChange={(e) => {
 											if (e.target.files && e.target.files[0]) {
-												setPhotoForm({ ...photoForm, imageFile: e.target.files[0] });
+												const file = e.target.files[0];
+												if (photoForm.previewUrl) URL.revokeObjectURL(photoForm.previewUrl);
+												setPhotoForm({
+													...photoForm,
+													imageFile: file,
+													previewUrl: URL.createObjectURL(file),
+												});
 											}
 										}}
 									/>
+									{photoForm.previewUrl && (
+										<div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+											<img
+												src={photoForm.previewUrl}
+												alt="Upload preview"
+												style={{ maxHeight: 90, borderRadius: 6, border: '1px solid var(--border)' }}
+											/>
+											<button
+												type="button"
+												onClick={() => {
+													if (photoForm.previewUrl) URL.revokeObjectURL(photoForm.previewUrl);
+													setPhotoForm({ ...photoForm, imageFile: null, previewUrl: '' });
+												}}
+												style={{ background: '#334155', color: '#fff', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 12, cursor: 'pointer' }}
+											>
+												Remove
+											</button>
+										</div>
+									)}
 								</div>
 								<div className="prog-form-group" style={{ marginBottom: 14 }}>
 									<label>Or External Image URL</label>
@@ -1024,7 +1080,7 @@ export default function ProgressPage() {
 								</div>
 							</div>
 							<div className="prog-modal-foot">
-								<button type="button" className="prog-btn-secondary" onClick={() => setModalMode(null)}>
+								<button type="button" className="prog-btn-secondary" onClick={closePhotoModal}>
 									Cancel
 								</button>
 								<button type="submit" className="prog-btn-primary" disabled={isSubmitting}>

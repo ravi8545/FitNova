@@ -164,6 +164,19 @@ class SupplementCartViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def partial_update(self, request, *args, **kwargs):
+        from django.db import transaction
+        with transaction.atomic():
+            instance = SupplementCartItem.objects.select_for_update().filter(
+                id=kwargs.get('pk'), user=request.user
+            ).first()
+            if not instance:
+                return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
     @action(detail=False, methods=['delete'])
     def clear(self, request):
         count, _ = SupplementCartItem.objects.filter(user=request.user).delete()
@@ -176,30 +189,52 @@ class SupplementOverviewView(APIView):
     def get(self, request):
         user = request.user
         stacks = UserSupplementStack.objects.filter(user=user)
-        active_count = stacks.filter(status='Active').count()
+        active_stacks = stacks.filter(status='Active')
+        active_count = active_stacks.count()
         completed_count = stacks.filter(status='Completed').count()
         reminders_count = SupplementReminder.objects.filter(user=user, is_enabled=True).count()
 
-        # Calculate actual consecutive adherence streak
+        # Calculate actual consecutive adherence streak based on active planned doses
         today = timezone.localdate()
         streak_days = 0
         current_date = today
 
-        while True:
-            has_log = SupplementDailyLog.objects.filter(
-                user=user,
-                date=current_date,
-                is_taken=True
-            ).exists()
-            if has_log:
-                streak_days += 1
-                current_date -= timedelta(days=1)
-            else:
-                # If today hasn't been logged yet, allow streak to continue from yesterday
-                if current_date == today:
+        if active_count > 0:
+            active_stack_ids = set(active_stacks.values_list('id', flat=True))
+            while True:
+                # Doses taken on current_date for active stack items
+                taken_count = SupplementDailyLog.objects.filter(
+                    user=user,
+                    date=current_date,
+                    is_taken=True,
+                    stack_item_id__in=active_stack_ids
+                ).count()
+
+                if taken_count >= active_count:
+                    streak_days += 1
                     current_date -= timedelta(days=1)
-                    continue
-                break
+                else:
+                    if current_date == today:
+                        # Allow ongoing streak from yesterday if today's doses are not yet complete
+                        current_date -= timedelta(days=1)
+                        continue
+                    break
+        else:
+            # Fallback to general logged doses if no specific active stacks
+            while True:
+                has_log = SupplementDailyLog.objects.filter(
+                    user=user,
+                    date=current_date,
+                    is_taken=True
+                ).exists()
+                if has_log:
+                    streak_days += 1
+                    current_date -= timedelta(days=1)
+                else:
+                    if current_date == today:
+                        current_date -= timedelta(days=1)
+                        continue
+                    break
 
         goals = SupplementGoal.objects.filter(user=user)
         goal_data = SupplementGoalSerializer(goals, many=True).data

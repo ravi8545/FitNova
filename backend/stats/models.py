@@ -38,8 +38,8 @@ class BodyMeasurement(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        # Auto-compute BMI using profile height if available and BMI is empty or 0
-        if not self.bmi and self.user_id:
+        # Auto-compute or update BMI using profile height if available
+        if self.user_id:
             try:
                 profile = getattr(self.user, "profile", None)
                 if profile and profile.height and profile.height > 0:
