@@ -25,6 +25,8 @@ urlpatterns = [
     path("api/profile/", include("profiles.urls")),
     path("api/supplements/", include("supplements.urls")),
     path("api/reports/", include("reports.urls")),
+    path("api/stats/", include("stats.urls")),
+    path("api/progress/", include("progress.urls")),
     # path("api/workouts/", include("workouts.urls")),
     # path("api/nutrition/", include("nutrition.urls")),
     # path("api/tracking/", include("tracking.urls")),

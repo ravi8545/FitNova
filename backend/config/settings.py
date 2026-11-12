@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     "core",
     "supplements",
     "reports",
+    "stats",
+    "progress",
 ]
 
 MIDDLEWARE = [

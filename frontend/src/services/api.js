@@ -103,6 +103,11 @@ export async function apiClient(endpoint, options = {}) {
     ...options.headers,
   };
 
+  // If sending FormData, remove Content-Type so browser sets boundary automatically
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
+
   let response;
   try {
     response = await fetch(url, { ...options, headers });
