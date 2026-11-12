@@ -346,20 +346,28 @@ export default function ReportsPage() {
                   </div>
 
                   <div className="flex items-center gap-1.5 text-xs font-bold">
-                    {kpi.isPositive ? (
-                      <span className="flex items-center text-[#2BAF34]">
-                        <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                        {kpi.change}
-                      </span>
+                    {kpi.change ? (
+                      kpi.isPositive ? (
+                        <span className="flex items-center text-[#2BAF34]">
+                          <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
+                          {kpi.change}
+                        </span>
+                      ) : (
+                        <span className="flex items-center text-[#EF4444]">
+                          <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
+                          {kpi.change}
+                        </span>
+                      )
                     ) : (
-                      <span className="flex items-center text-[#EF4444]">
-                        <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                        {kpi.change}
+                      <span className="text-[10px] text-slate-400 font-medium bg-[#121B26] px-1.5 py-0.5 rounded border border-[#1E2D42]">
+                        {kpi.comparisonText || 'No prior data'}
                       </span>
                     )}
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      {kpi.comparisonText}
-                    </span>
+                    {kpi.change && (
+                      <span className="text-[10px] text-slate-400 font-normal">
+                        {kpi.comparisonText}
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -114,8 +114,10 @@ export default function MacronutrientDonut({ distribution }) {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-slate-400 font-medium">{item.amount}</span>
-                <span className="font-bold text-white min-w-[28px] text-right">
+                <span className="text-slate-400 font-medium">
+                  {item.amount} {item.calories ? `• ${item.calories}` : ''}
+                </span>
+                <span className="font-bold text-white min-w-[32px] text-right">
                   {item.percentage}%
                 </span>
               </div>

@@ -59,12 +59,13 @@ export async function fetchCategories() {
 }
 
 /**
- * Fetch products catalogue from backend with optional category & search filter
+ * Fetch products catalogue from backend with optional category, search & ordering filter
  */
-export async function fetchProducts(category = null, search = null) {
+export async function fetchProducts(category = null, search = null, ordering = null) {
   const params = new URLSearchParams();
   if (category && category !== 'all') params.append('category', category);
   if (search && search.trim()) params.append('search', search.trim());
+  if (ordering) params.append('ordering', ordering);
 
   const query = params.toString() ? `?${params.toString()}` : '';
   const data = await apiClient(`/supplements/products/${query}`);
@@ -272,13 +273,45 @@ export async function logSupplementIntake(stackItemId, date = null, isTaken = tr
 }
 
 /**
+ * Resolves high quality image for article items
+ */
+export function resolveArticleImage(item) {
+  if (item.image && typeof item.image === 'string' && (item.image.startsWith('http') || item.image.startsWith('/') || item.image.startsWith('data:'))) {
+    return item.image;
+  }
+  if (item.image_url && typeof item.image_url === 'string' && (item.image_url.startsWith('http') || item.image_url.startsWith('/'))) {
+    return item.image_url;
+  }
+  const title = (item.title || '').toLowerCase();
+  if (title.includes('creatine')) return creatineImg;
+  if (title.includes('muscle') || title.includes('gain') || title.includes('pre')) return c4Img;
+  if (title.includes('vitamin') || title.includes('health') || title.includes('vital')) return viteImg;
+  return wheyImg;
+}
+
+/**
  * Fetch supplement educational articles
  */
 export async function fetchArticles() {
-  const data = await apiClient('/supplements/articles/');
-  const list = Array.isArray(data) ? data : (data.results || []);
-  if (list.length > 0) return list;
-  return ARTICLES_AND_TIPS;
+  try {
+    const data = await apiClient('/supplements/articles/');
+    const list = Array.isArray(data) ? data : (data.results || []);
+    if (list.length > 0) {
+      return list.map((art) => ({
+        ...art,
+        image: resolveArticleImage(art),
+        date: art.published_date || art.date || 'Recent',
+        readTime: art.readTime || '4 min read',
+        category: art.category || (art.title?.toLowerCase().includes('creatine') ? 'Supplement Science' : 'Fitness Guide'),
+      }));
+    }
+  } catch (err) {
+    console.warn('Articles API fetch error:', err.message);
+  }
+  return ARTICLES_AND_TIPS.map((art) => ({
+    ...art,
+    image: resolveArticleImage(art),
+  }));
 }
 
 /**

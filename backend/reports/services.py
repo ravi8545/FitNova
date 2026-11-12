@@ -19,6 +19,23 @@ def format_day(d):
 def format_day_year(d):
     return f"{d.day} {d.strftime('%b %Y')}"
 
+def calculate_trend(current_val, prev_val, has_prev_logs, higher_is_better=True, unit="%"):
+    """
+    Computes percentage change vs previous period.
+    A missing previous-period baseline is represented as None / 'No previous data', NOT 0%.
+    Positive/negative status strictly depends on metric direction and goals.
+    """
+    if not has_prev_logs or prev_val is None or prev_val == 0:
+        return None, True, "No previous data", None
+
+    change_pct = round(((current_val - prev_val) / float(prev_val)) * 100)
+    sign = "+" if change_pct > 0 else ""
+    change_str = f"{sign}{change_pct}{unit}"
+    is_positive = (change_pct >= 0) if higher_is_better else (change_pct <= 0)
+    comparison_text = "vs previous period"
+    return change_str, is_positive, comparison_text, change_pct
+
+
 class AnalyticsService:
     @staticmethod
     def get_date_range(period='7d'):
@@ -52,6 +69,7 @@ class AnalyticsService:
         )
 
         has_logs = logs.exists()
+        has_prev_logs = prev_logs.exists()
 
         if has_logs:
             total_calories = sum(log.calories_consumed for log in logs)
@@ -66,25 +84,15 @@ class AnalyticsService:
             total_sleep = sum(float(log.sleep_hours) for log in logs)
             avg_sleep = round(total_sleep / len(logs), 1)
 
-            prev_calories = sum(log.calories_consumed for log in prev_logs)
-            prev_burned = sum(log.calories_burned for log in prev_logs)
-            prev_protein = sum(float(log.protein_g) for log in prev_logs)
-            prev_carbs = sum(float(log.carbs_g) for log in prev_logs)
-            prev_fat = sum(float(log.fat_g) for log in prev_logs)
-            prev_water = (sum(float(log.water_liters) for log in prev_logs) / len(prev_logs)) if prev_logs.exists() else 0.0
-            prev_workouts = sum(log.workout_sessions_count for log in prev_logs)
-            prev_duration = sum(log.workout_duration_minutes for log in prev_logs)
-            prev_sleep = (sum(float(log.sleep_hours) for log in prev_logs) / len(prev_logs)) if prev_logs.exists() else 0.0
-
-            cal_change = round(((total_calories - prev_calories) / prev_calories) * 100) if prev_calories > 0 else 0
-            burned_change = round(((total_burned - prev_burned) / prev_burned) * 100) if prev_burned > 0 else 0
-            protein_change = round(((total_protein - prev_protein) / prev_protein) * 100) if prev_protein > 0 else 0
-            carbs_change = round(((total_carbs - prev_carbs) / prev_carbs) * 100) if prev_carbs > 0 else 0
-            fat_change = round(((total_fat - prev_fat) / prev_fat) * 100) if prev_fat > 0 else 0
-            water_change = round(((avg_water - prev_water) / prev_water) * 100) if prev_water > 0 else 0
-            workout_change = round(((total_workouts - prev_workouts) / prev_workouts) * 100) if prev_workouts > 0 else 0
-            duration_change = round(((total_duration - prev_duration) / prev_duration) * 100) if prev_duration > 0 else 0
-            sleep_change = round(((avg_sleep - prev_sleep) / prev_sleep) * 100) if prev_sleep > 0 else 0
+            prev_calories = sum(log.calories_consumed for log in prev_logs) if has_prev_logs else 0
+            prev_burned = sum(log.calories_burned for log in prev_logs) if has_prev_logs else 0
+            prev_protein = sum(float(log.protein_g) for log in prev_logs) if has_prev_logs else 0.0
+            prev_carbs = sum(float(log.carbs_g) for log in prev_logs) if has_prev_logs else 0.0
+            prev_fat = sum(float(log.fat_g) for log in prev_logs) if has_prev_logs else 0.0
+            prev_water = (sum(float(log.water_liters) for log in prev_logs) / len(prev_logs)) if has_prev_logs else 0.0
+            prev_workouts = sum(log.workout_sessions_count for log in prev_logs) if has_prev_logs else 0
+            prev_duration = sum(log.workout_duration_minutes for log in prev_logs) if has_prev_logs else 0
+            prev_sleep = (sum(float(log.sleep_hours) for log in prev_logs) / len(prev_logs)) if has_prev_logs else 0.0
 
             cal_sparkline = [log.calories_consumed for log in logs][-7:]
             burned_sparkline = [log.calories_burned for log in logs][-7:]
@@ -108,15 +116,15 @@ class AnalyticsService:
             total_sleep = 0.0
             avg_sleep = 0.0
 
-            cal_change = 0
-            burned_change = 0
-            protein_change = 0
-            carbs_change = 0
-            fat_change = 0
-            water_change = 0
-            workout_change = 0
-            duration_change = 0
-            sleep_change = 0
+            prev_calories = 0
+            prev_burned = 0
+            prev_protein = 0.0
+            prev_carbs = 0.0
+            prev_fat = 0.0
+            prev_water = 0.0
+            prev_workouts = 0
+            prev_duration = 0
+            prev_sleep = 0.0
 
             cal_sparkline = []
             burned_sparkline = []
@@ -130,6 +138,17 @@ class AnalyticsService:
 
         avg_days = len(logs) if has_logs else 1
 
+        # Calculate accurate baseline trends
+        cal_trend = calculate_trend(total_calories, prev_calories, has_prev_logs, higher_is_better=True)
+        burned_trend = calculate_trend(total_burned, prev_burned, has_prev_logs, higher_is_better=True)
+        protein_trend = calculate_trend(total_protein, prev_protein, has_prev_logs, higher_is_better=True)
+        carbs_trend = calculate_trend(total_carbs, prev_carbs, has_prev_logs, higher_is_better=True)
+        fat_trend = calculate_trend(total_fat, prev_fat, has_prev_logs, higher_is_better=True)
+        water_trend = calculate_trend(avg_water, prev_water, has_prev_logs, higher_is_better=True)
+        workout_trend = calculate_trend(total_workouts, prev_workouts, has_prev_logs, higher_is_better=True)
+        duration_trend = calculate_trend(total_duration, prev_duration, has_prev_logs, higher_is_better=True)
+        sleep_trend = calculate_trend(avg_sleep, prev_sleep, has_prev_logs, higher_is_better=True)
+
         # Tab-specific KPI metrics and summary construction
         if normalized_tab == 'nutrition':
             kpi_metrics = [
@@ -137,10 +156,10 @@ class AnalyticsService:
                     'id': 'kpi-calories',
                     'title': 'Calories In',
                     'value': f"{total_calories:,}",
-                    'target': f"{2000 * avg_days:,} kcal",
-                    'change': f"{'+' if cal_change > 0 else ''}{cal_change}%",
-                    'isPositive': cal_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{2000 * days:,} kcal",
+                    'change': cal_trend[0],
+                    'isPositive': cal_trend[1],
+                    'comparisonText': cal_trend[2],
                     'type': 'calories',
                     'sparklineData': cal_sparkline,
                 },
@@ -148,10 +167,10 @@ class AnalyticsService:
                     'id': 'kpi-protein',
                     'title': 'Protein',
                     'value': f"{int(total_protein):,}g",
-                    'target': f"{150 * avg_days:,}g",
-                    'change': f"{'+' if protein_change > 0 else ''}{protein_change}%",
-                    'isPositive': protein_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{150 * days:,}g",
+                    'change': protein_trend[0],
+                    'isPositive': protein_trend[1],
+                    'comparisonText': protein_trend[2],
                     'type': 'protein',
                     'sparklineData': protein_sparkline,
                 },
@@ -159,10 +178,10 @@ class AnalyticsService:
                     'id': 'kpi-carbs',
                     'title': 'Carbohydrates',
                     'value': f"{int(total_carbs):,}g",
-                    'target': f"{220 * avg_days:,}g",
-                    'change': f"{'+' if carbs_change > 0 else ''}{carbs_change}%",
-                    'isPositive': carbs_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{220 * days:,}g",
+                    'change': carbs_trend[0],
+                    'isPositive': carbs_trend[1],
+                    'comparisonText': carbs_trend[2],
                     'type': 'nutrition',
                     'sparklineData': carbs_sparkline,
                 },
@@ -170,19 +189,19 @@ class AnalyticsService:
                     'id': 'kpi-fat',
                     'title': 'Fats',
                     'value': f"{int(total_fat):,}g",
-                    'target': f"{60 * avg_days:,}g",
-                    'change': f"{'+' if fat_change > 0 else ''}{fat_change}%",
-                    'isPositive': fat_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{60 * days:,}g",
+                    'change': fat_trend[0],
+                    'isPositive': fat_trend[1],
+                    'comparisonText': fat_trend[2],
                     'type': 'nutrition',
                     'sparklineData': fat_sparkline,
                 },
             ]
             report_summary = [
-                {'label': 'Avg. Daily Calories', 'value': f"{int(total_calories / avg_days):,} kcal" if has_logs else "0 kcal", 'change': f"{'+' if cal_change > 0 else ''}{cal_change}%", 'positive': cal_change >= 0},
-                {'label': 'Avg. Daily Protein', 'value': f"{int(total_protein / avg_days)} g" if has_logs else "0 g", 'change': f"{'+' if protein_change > 0 else ''}{protein_change}%", 'positive': protein_change >= 0},
-                {'label': 'Avg. Daily Carbs', 'value': f"{int(total_carbs / avg_days)} g" if has_logs else "0 g", 'change': f"{'+' if carbs_change > 0 else ''}{carbs_change}%", 'positive': carbs_change >= 0},
-                {'label': 'Avg. Daily Fats', 'value': f"{int(total_fat / avg_days)} g" if has_logs else "0 g", 'change': f"{'+' if fat_change > 0 else ''}{fat_change}%", 'positive': fat_change >= 0},
+                {'label': 'Avg. Daily Calories', 'value': f"{int(total_calories / avg_days):,} kcal" if has_logs else "0 kcal", 'change': cal_trend[0] or "N/A", 'positive': cal_trend[1]},
+                {'label': 'Avg. Daily Protein', 'value': f"{int(total_protein / avg_days)} g" if has_logs else "0 g", 'change': protein_trend[0] or "N/A", 'positive': protein_trend[1]},
+                {'label': 'Avg. Daily Carbs', 'value': f"{int(total_carbs / avg_days)} g" if has_logs else "0 g", 'change': carbs_trend[0] or "N/A", 'positive': carbs_trend[1]},
+                {'label': 'Avg. Daily Fats', 'value': f"{int(total_fat / avg_days)} g" if has_logs else "0 g", 'change': fat_trend[0] or "N/A", 'positive': fat_trend[1]},
             ]
         elif normalized_tab == 'workouts':
             kpi_metrics = [
@@ -190,10 +209,10 @@ class AnalyticsService:
                     'id': 'kpi-workouts',
                     'title': 'Total Workouts',
                     'value': f"{total_workouts} sessions",
-                    'target': f"{round(days * 0.6)} sessions",
-                    'change': f"{'+' if workout_change > 0 else ''}{workout_change}%",
-                    'isPositive': workout_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{max(1, round(days * 0.6))} sessions",
+                    'change': workout_trend[0],
+                    'isPositive': workout_trend[1],
+                    'comparisonText': workout_trend[2],
                     'type': 'workouts',
                     'sparklineData': workout_sparkline,
                 },
@@ -202,9 +221,9 @@ class AnalyticsService:
                     'title': 'Total Duration',
                     'value': f"{total_duration} mins",
                     'target': f"{round(days * 35)} mins",
-                    'change': f"{'+' if duration_change > 0 else ''}{duration_change}%",
-                    'isPositive': duration_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'change': duration_trend[0],
+                    'isPositive': duration_trend[1],
+                    'comparisonText': duration_trend[2],
                     'type': 'workouts',
                     'sparklineData': duration_sparkline,
                 },
@@ -212,10 +231,10 @@ class AnalyticsService:
                     'id': 'kpi-burned',
                     'title': 'Calories Burned',
                     'value': f"{total_burned:,} kcal",
-                    'target': f"{400 * avg_days:,} kcal",
-                    'change': f"{'+' if burned_change > 0 else ''}{burned_change}%",
-                    'isPositive': burned_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{400 * days:,} kcal",
+                    'change': burned_trend[0],
+                    'isPositive': burned_trend[1],
+                    'comparisonText': burned_trend[2],
                     'type': 'calories',
                     'sparklineData': burned_sparkline,
                 },
@@ -224,7 +243,7 @@ class AnalyticsService:
                     'title': 'Avg Duration / Workout',
                     'value': f"{int(total_duration / total_workouts) if total_workouts > 0 else 0} mins",
                     'target': '45 mins',
-                    'change': '0%',
+                    'change': None,
                     'isPositive': True,
                     'comparisonText': 'per session target',
                     'type': 'workouts',
@@ -232,10 +251,10 @@ class AnalyticsService:
                 },
             ]
             report_summary = [
-                {'label': 'Total Workouts', 'value': f"{total_workouts} sessions", 'change': f"{'+' if workout_change > 0 else ''}{workout_change}%", 'positive': workout_change >= 0},
-                {'label': 'Total Duration', 'value': f"{total_duration} mins", 'change': f"{'+' if duration_change > 0 else ''}{duration_change}%", 'positive': duration_change >= 0},
-                {'label': 'Total Burned', 'value': f"{total_burned:,} kcal", 'change': f"{'+' if burned_change > 0 else ''}{burned_change}%", 'positive': burned_change >= 0},
-                {'label': 'Avg Duration', 'value': f"{int(total_duration / total_workouts) if total_workouts > 0 else 0} mins", 'change': '0%', 'positive': True},
+                {'label': 'Total Workouts', 'value': f"{total_workouts} sessions", 'change': workout_trend[0] or "N/A", 'positive': workout_trend[1]},
+                {'label': 'Total Duration', 'value': f"{total_duration} mins", 'change': duration_trend[0] or "N/A", 'positive': duration_trend[1]},
+                {'label': 'Total Burned', 'value': f"{total_burned:,} kcal", 'change': burned_trend[0] or "N/A", 'positive': burned_trend[1]},
+                {'label': 'Avg Duration', 'value': f"{int(total_duration / total_workouts) if total_workouts > 0 else 0} mins", 'change': 'Target: 45m', 'positive': True},
             ]
         elif normalized_tab == 'water-intake':
             kpi_metrics = [
@@ -244,9 +263,9 @@ class AnalyticsService:
                     'title': 'Daily Avg Water',
                     'value': f"{avg_water} L",
                     'target': '3.5 L',
-                    'change': f"{'+' if water_change > 0 else ''}{water_change}%",
-                    'isPositive': water_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'change': water_trend[0],
+                    'isPositive': water_trend[1],
+                    'comparisonText': water_trend[2],
                     'type': 'water',
                     'sparklineData': water_sparkline,
                 },
@@ -255,16 +274,16 @@ class AnalyticsService:
                     'title': 'Total Water',
                     'value': f"{round(total_water, 1)} L",
                     'target': f"{round(days * 3.5, 1)} L",
-                    'change': f"{'+' if water_change > 0 else ''}{water_change}%",
-                    'isPositive': water_change >= 0,
-                    'comparisonText': 'vs period target',
+                    'change': water_trend[0],
+                    'isPositive': water_trend[1],
+                    'comparisonText': 'period target',
                     'type': 'water',
                     'sparklineData': water_sparkline,
                 },
             ]
             report_summary = [
-                {'label': 'Avg. Daily Water', 'value': f"{avg_water} L" if has_logs else "0.0 L", 'change': f"{'+' if water_change > 0 else ''}{water_change}%", 'positive': water_change >= 0},
-                {'label': 'Total Water Intake', 'value': f"{round(total_water, 1)} L" if has_logs else "0.0 L", 'change': f"{'+' if water_change > 0 else ''}{water_change}%", 'positive': water_change >= 0},
+                {'label': 'Avg. Daily Water', 'value': f"{avg_water} L" if has_logs else "0.0 L", 'change': water_trend[0] or "N/A", 'positive': water_trend[1]},
+                {'label': 'Total Water Intake', 'value': f"{round(total_water, 1)} L" if has_logs else "0.0 L", 'change': water_trend[0] or "N/A", 'positive': water_trend[1]},
             ]
         elif normalized_tab == 'sleep':
             kpi_metrics = [
@@ -273,9 +292,9 @@ class AnalyticsService:
                     'title': 'Avg Nightly Sleep',
                     'value': f"{avg_sleep} hrs",
                     'target': '8.0 hrs',
-                    'change': f"{'+' if sleep_change > 0 else ''}{sleep_change}%",
-                    'isPositive': sleep_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'change': sleep_trend[0],
+                    'isPositive': sleep_trend[1],
+                    'comparisonText': sleep_trend[2],
                     'type': 'sleep',
                     'sparklineData': sleep_sparkline,
                 },
@@ -284,22 +303,29 @@ class AnalyticsService:
                     'title': 'Total Sleep Time',
                     'value': f"{round(total_sleep, 1)} hrs",
                     'target': f"{round(days * 8.0, 1)} hrs",
-                    'change': f"{'+' if sleep_change > 0 else ''}{sleep_change}%",
-                    'isPositive': sleep_change >= 0,
+                    'change': sleep_trend[0],
+                    'isPositive': sleep_trend[1],
                     'comparisonText': 'period target',
                     'type': 'sleep',
                     'sparklineData': sleep_sparkline,
                 },
             ]
             report_summary = [
-                {'label': 'Avg. Sleep', 'value': f"{avg_sleep} hrs" if has_logs else "0.0 hrs", 'change': f"{'+' if sleep_change > 0 else ''}{sleep_change}%", 'positive': sleep_change >= 0},
-                {'label': 'Total Sleep', 'value': f"{round(total_sleep, 1)} hrs" if has_logs else "0.0 hrs", 'change': f"{'+' if sleep_change > 0 else ''}{sleep_change}%", 'positive': sleep_change >= 0},
+                {'label': 'Avg. Sleep', 'value': f"{avg_sleep} hrs" if has_logs else "0.0 hrs", 'change': sleep_trend[0] or "N/A", 'positive': sleep_trend[1]},
+                {'label': 'Total Sleep', 'value': f"{round(total_sleep, 1)} hrs" if has_logs else "0.0 hrs", 'change': sleep_trend[0] or "N/A", 'positive': sleep_trend[1]},
             ]
         elif normalized_tab == 'supplements':
-            active_supplements = UserSupplementStack.objects.filter(user=user, status='Active').count()
-            doses_taken = SupplementDailyLog.objects.filter(user=user, date__range=[start_date, end_date], is_taken=True).count()
+            active_supplements = UserSupplementStack.objects.filter(user=user, status='Active')
+            active_count = active_supplements.count()
+            planned_doses = active_count * days
+            doses_taken = SupplementDailyLog.objects.filter(
+                user=user,
+                date__range=[start_date, end_date],
+                is_taken=True
+            ).count()
+            adherence_rate = round((doses_taken / planned_doses) * 100) if planned_doses > 0 else (100 if doses_taken > 0 else 0)
             reminders_active = SupplementReminder.objects.filter(user=user, is_enabled=True).count()
-            
+
             # Real streak calculation
             today = timezone.localdate()
             streak_days = 0
@@ -317,24 +343,24 @@ class AnalyticsService:
 
             kpi_metrics = [
                 {
-                    'id': 'kpi-supp-active',
-                    'title': 'Active Supplements',
-                    'value': str(active_supplements),
-                    'target': '3 items',
-                    'change': '0%',
-                    'isPositive': True,
-                    'comparisonText': 'in personal stack',
+                    'id': 'kpi-supp-adherence',
+                    'title': 'Adherence Rate',
+                    'value': f"{adherence_rate}%",
+                    'target': '100%',
+                    'change': None,
+                    'isPositive': adherence_rate >= 80,
+                    'comparisonText': f"{doses_taken} of {planned_doses} doses taken",
                     'type': 'supplements',
                     'sparklineData': [],
                 },
                 {
-                    'id': 'kpi-supp-taken',
-                    'title': 'Doses Taken',
-                    'value': str(doses_taken),
-                    'target': f"{active_supplements * days} doses",
-                    'change': '0%',
-                    'isPositive': doses_taken > 0,
-                    'comparisonText': 'in this period',
+                    'id': 'kpi-supp-active',
+                    'title': 'Active Supplements',
+                    'value': str(active_count),
+                    'target': 'In stack',
+                    'change': None,
+                    'isPositive': True,
+                    'comparisonText': 'personal active stack',
                     'type': 'supplements',
                     'sparklineData': [],
                 },
@@ -343,9 +369,9 @@ class AnalyticsService:
                     'title': 'Adherence Streak',
                     'value': f"{streak_days} days",
                     'target': '14 days',
-                    'change': '0%',
+                    'change': None,
                     'isPositive': streak_days > 0,
-                    'comparisonText': 'consecutive days',
+                    'comparisonText': 'consecutive days logged',
                     'type': 'supplements',
                     'sparklineData': [],
                 },
@@ -353,38 +379,47 @@ class AnalyticsService:
                     'id': 'kpi-supp-reminders',
                     'title': 'Active Reminders',
                     'value': str(reminders_active),
-                    'target': f"{active_supplements} reminders",
-                    'change': '0%',
+                    'target': f"{active_count} reminders",
+                    'change': None,
                     'isPositive': True,
-                    'comparisonText': 'enabled reminders',
+                    'comparisonText': 'scheduled notifications',
                     'type': 'supplements',
                     'sparklineData': [],
                 },
             ]
             report_summary = [
-                {'label': 'Active Supplements', 'value': f"{active_supplements} items", 'change': '0%', 'positive': True},
-                {'label': 'Doses Taken', 'value': f"{doses_taken} doses", 'change': '0%', 'positive': True},
-                {'label': 'Streak Days', 'value': f"{streak_days} days", 'change': '0%', 'positive': streak_days > 0},
-                {'label': 'Active Reminders', 'value': f"{reminders_active}", 'change': '0%', 'positive': True},
+                {'label': 'Adherence Rate', 'value': f"{adherence_rate}%", 'change': f"{doses_taken}/{planned_doses} doses", 'positive': adherence_rate >= 80},
+                {'label': 'Active Stack Items', 'value': f"{active_count} items", 'change': 'Active', 'positive': True},
+                {'label': 'Streak Days', 'value': f"{streak_days} days", 'change': f"{streak_days}d streak", 'positive': streak_days > 0},
+                {'label': 'Active Reminders', 'value': f"{reminders_active}", 'change': 'Configured', 'positive': True},
             ]
         elif normalized_tab == 'body-stats':
             weight_logs = [log for log in logs if log.weight_kg is not None]
             muscle_logs = [log for log in logs if log.muscle_mass_pct is not None]
             fat_logs = [log for log in logs if log.body_fat_pct is not None]
-            
+
+            prev_weight_logs = [log for log in prev_logs if log.weight_kg is not None]
+            prev_fat_logs = [log for log in prev_logs if log.body_fat_pct is not None]
+
             latest_weight = float(weight_logs[-1].weight_kg) if weight_logs else None
             latest_muscle = float(muscle_logs[-1].muscle_mass_pct) if muscle_logs else None
             latest_fat = float(fat_logs[-1].body_fat_pct) if fat_logs else None
-            
+
+            prev_weight = float(prev_weight_logs[-1].weight_kg) if prev_weight_logs else None
+            prev_fat = float(prev_fat_logs[-1].body_fat_pct) if prev_fat_logs else None
+
+            weight_trend = calculate_trend(latest_weight, prev_weight, bool(prev_weight_logs), higher_is_better=False, unit=" kg") if latest_weight is not None else (None, True, "No previous data", None)
+            fat_trend = calculate_trend(latest_fat, prev_fat, bool(prev_fat_logs), higher_is_better=False, unit="%") if latest_fat is not None else (None, True, "No previous data", None)
+
             kpi_metrics = [
                 {
                     'id': 'kpi-weight',
                     'title': 'Current Weight',
                     'value': f"{latest_weight} kg" if latest_weight is not None else "--",
                     'target': '75 kg',
-                    'change': '0 kg',
-                    'isPositive': True,
-                    'comparisonText': 'latest measurement',
+                    'change': weight_trend[0],
+                    'isPositive': weight_trend[1],
+                    'comparisonText': weight_trend[2],
                     'type': 'weight',
                     'sparklineData': [float(log.weight_kg) for log in weight_logs][-7:],
                 },
@@ -393,9 +428,9 @@ class AnalyticsService:
                     'title': 'Muscle Mass',
                     'value': f"{latest_muscle}%" if latest_muscle is not None else "--",
                     'target': '45%',
-                    'change': '0%',
+                    'change': None,
                     'isPositive': True,
-                    'comparisonText': 'body composition',
+                    'comparisonText': 'body composition target',
                     'type': 'body',
                     'sparklineData': [float(log.muscle_mass_pct) for log in muscle_logs][-7:],
                 },
@@ -404,17 +439,17 @@ class AnalyticsService:
                     'title': 'Body Fat',
                     'value': f"{latest_fat}%" if latest_fat is not None else "--",
                     'target': '15%',
-                    'change': '0%',
-                    'isPositive': True,
-                    'comparisonText': 'body composition',
+                    'change': fat_trend[0],
+                    'isPositive': fat_trend[1],
+                    'comparisonText': fat_trend[2],
                     'type': 'body',
                     'sparklineData': [float(log.body_fat_pct) for log in fat_logs][-7:],
                 },
             ]
             report_summary = [
-                {'label': 'Current Weight', 'value': f"{latest_weight} kg" if latest_weight is not None else "No data", 'change': '0%', 'positive': True},
-                {'label': 'Muscle Mass', 'value': f"{latest_muscle}%" if latest_muscle is not None else "No data", 'change': '0%', 'positive': True},
-                {'label': 'Body Fat', 'value': f"{latest_fat}%" if latest_fat is not None else "No data", 'change': '0%', 'positive': True},
+                {'label': 'Current Weight', 'value': f"{latest_weight} kg" if latest_weight is not None else "No data", 'change': weight_trend[0] or "Latest", 'positive': weight_trend[1]},
+                {'label': 'Muscle Mass', 'value': f"{latest_muscle}%" if latest_muscle is not None else "No data", 'change': 'Target: 45%', 'positive': True},
+                {'label': 'Body Fat', 'value': f"{latest_fat}%" if latest_fat is not None else "No data", 'change': fat_trend[0] or "Target: 15%", 'positive': fat_trend[1]},
             ]
         else:
             # Default 'overview' tab
@@ -423,10 +458,10 @@ class AnalyticsService:
                     'id': 'kpi-calories',
                     'title': 'Calories',
                     'value': f"{total_calories:,}",
-                    'target': '15,400 kcal',
-                    'change': f"{'+' if cal_change > 0 else ''}{cal_change}%",
-                    'isPositive': cal_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{2000 * days:,} kcal",
+                    'change': cal_trend[0],
+                    'isPositive': cal_trend[1],
+                    'comparisonText': cal_trend[2],
                     'type': 'calories',
                     'sparklineData': cal_sparkline,
                 },
@@ -434,10 +469,10 @@ class AnalyticsService:
                     'id': 'kpi-protein',
                     'title': 'Protein',
                     'value': f"{int(total_protein):,}",
-                    'target': '1,050 g',
-                    'change': f"{'+' if protein_change > 0 else ''}{protein_change}%",
-                    'isPositive': protein_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{150 * days:,} g",
+                    'change': protein_trend[0],
+                    'isPositive': protein_trend[1],
+                    'comparisonText': protein_trend[2],
                     'type': 'protein',
                     'sparklineData': protein_sparkline,
                 },
@@ -445,10 +480,10 @@ class AnalyticsService:
                     'id': 'kpi-water',
                     'title': 'Water',
                     'value': str(avg_water),
-                    'target': '4 L',
-                    'change': f"{'+' if water_change > 0 else ''}{water_change}%",
-                    'isPositive': water_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{round(3.5 * days, 1)} L",
+                    'change': water_trend[0],
+                    'isPositive': water_trend[1],
+                    'comparisonText': water_trend[2],
                     'type': 'water',
                     'sparklineData': water_sparkline,
                 },
@@ -456,19 +491,19 @@ class AnalyticsService:
                     'id': 'kpi-workouts',
                     'title': 'Workouts',
                     'value': str(total_workouts),
-                    'target': '8 sessions',
-                    'change': f"{'+' if workout_change > 0 else ''}{workout_change}%",
-                    'isPositive': workout_change >= 0,
-                    'comparisonText': 'vs previous period',
+                    'target': f"{max(1, round(days * 0.6))} sessions",
+                    'change': workout_trend[0],
+                    'isPositive': workout_trend[1],
+                    'comparisonText': workout_trend[2],
                     'type': 'workouts',
                     'sparklineData': workout_sparkline,
                 },
             ]
             report_summary = [
-                {'label': 'Avg. Daily Calories', 'value': f"{int(total_calories / avg_days):,} kcal" if has_logs else "0 kcal", 'change': f"{'+' if cal_change > 0 else ''}{cal_change}%", 'positive': cal_change >= 0},
-                {'label': 'Avg. Daily Protein', 'value': f"{int(total_protein / avg_days)} g" if has_logs else "0 g", 'change': f"{'+' if protein_change > 0 else ''}{protein_change}%", 'positive': protein_change >= 0},
-                {'label': 'Avg. Daily Water', 'value': f"{avg_water} L" if has_logs else "0.0 L", 'change': f"{'+' if water_change > 0 else ''}{water_change}%", 'positive': water_change >= 0},
-                {'label': 'Total Workouts', 'value': f"{total_workouts} sessions", 'change': f"{'+' if workout_change > 0 else ''}{workout_change}%", 'positive': workout_change >= 0},
+                {'label': 'Avg. Daily Calories', 'value': f"{int(total_calories / avg_days):,} kcal" if has_logs else "0 kcal", 'change': cal_trend[0] or "N/A", 'positive': cal_trend[1]},
+                {'label': 'Avg. Daily Protein', 'value': f"{int(total_protein / avg_days)} g" if has_logs else "0 g", 'change': protein_trend[0] or "N/A", 'positive': protein_trend[1]},
+                {'label': 'Avg. Daily Water', 'value': f"{avg_water} L" if has_logs else "0.0 L", 'change': water_trend[0] or "N/A", 'positive': water_trend[1]},
+                {'label': 'Total Workouts', 'value': f"{total_workouts} sessions", 'change': workout_trend[0] or "N/A", 'positive': workout_trend[1]},
             ]
 
         calorie_intake_vs_burn = [
@@ -480,10 +515,16 @@ class AnalyticsService:
             for log in logs
         ]
 
-        total_macro_g = total_carbs + total_protein + total_fat
-        if total_macro_g > 0:
-            carbs_pct = round((total_carbs / total_macro_g) * 100)
-            protein_pct = round((total_protein / total_macro_g) * 100)
+        # Calculate macro calorie contributions using exact nutritional factors:
+        # Protein: 4 kcal/g, Carbohydrates: 4 kcal/g, Fat: 9 kcal/g
+        protein_cals = total_protein * 4.0
+        carbs_cals = total_carbs * 4.0
+        fat_cals = total_fat * 9.0
+        total_macro_cals = protein_cals + carbs_cals + fat_cals
+
+        if total_macro_cals > 0:
+            carbs_pct = round((carbs_cals / total_macro_cals) * 100)
+            protein_pct = round((protein_cals / total_macro_cals) * 100)
             fat_pct = max(0, 100 - (carbs_pct + protein_pct))
         else:
             carbs_pct = 0
@@ -491,11 +532,29 @@ class AnalyticsService:
             fat_pct = 0
 
         macronutrient_distribution = {
-            'totalCalories': f"{total_calories:,}",
+            'totalCalories': f"{int(total_macro_cals):,}",
             'items': [
-                {'name': 'Carbohydrates', 'percentage': carbs_pct, 'amount': f"{int(total_carbs // avg_days)}g", 'color': '#2BAF34'},
-                {'name': 'Protein', 'percentage': protein_pct, 'amount': f"{int(total_protein // avg_days)}g", 'color': '#F59E0B'},
-                {'name': 'Fats', 'percentage': fat_pct, 'amount': f"{int(total_fat // avg_days)}g", 'color': '#3B82F6'},
+                {
+                    'name': 'Carbohydrates',
+                    'percentage': carbs_pct,
+                    'amount': f"{int(total_carbs // avg_days)}g",
+                    'calories': f"{int(carbs_cals // avg_days)} kcal",
+                    'color': '#2BAF34'
+                },
+                {
+                    'name': 'Protein',
+                    'percentage': protein_pct,
+                    'amount': f"{int(total_protein // avg_days)}g",
+                    'calories': f"{int(protein_cals // avg_days)} kcal",
+                    'color': '#F59E0B'
+                },
+                {
+                    'name': 'Fats',
+                    'percentage': fat_pct,
+                    'amount': f"{int(total_fat // avg_days)}g",
+                    'calories': f"{int(fat_cals // avg_days)} kcal",
+                    'color': '#3B82F6'
+                },
             ]
         }
 

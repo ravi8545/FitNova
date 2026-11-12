@@ -120,6 +120,15 @@ except ImportError:
             "is installed. Please run: pip install mysqlclient or pip install pymysql"
         ) from e
 
+# Allow MySQL 8.0.x on Django 6.0
+try:
+    from django.db.backends.mysql.base import DatabaseFeatures
+    DatabaseFeatures.minimum_database_version = property(
+        lambda self: (10, 11) if self.connection.mysql_is_mariadb else (8, 0)
+    )
+except Exception:
+    pass
+
 DB_ENGINE = config("DB_ENGINE", default="mysql").lower()
 if DB_ENGINE != "mysql":
     raise ImproperlyConfigured(

@@ -158,22 +158,53 @@ export const ARTICLES_AND_TIPS = [
   {
     id: 'art-1',
     title: 'Do You Really Need Supplements?',
-    subtitle: 'A complete guide for beginners.',
+    subtitle: 'A complete science-backed guide for fitness enthusiasts and beginners.',
     date: '10 Jun 2025',
+    readTime: '3 min read',
+    category: 'Nutrition Guide',
     image: wheyImg,
+    content: `Supplements are designed to complement a wholesome diet, not replace real whole foods. For most beginners, a solid nutrition plan with adequate protein, complex carbohydrates, healthy fats, and proper hydration covers 90% of your body's physiological requirements.
+
+However, supplements become valuable when you have specific nutritional gaps or athletic goals:
+
+1. Whey Protein: Essential if you struggle to hit your daily 1.6 - 2.2g of protein per kg of bodyweight through meals alone. Fast-absorbing and rich in leucine to stimulate muscle protein synthesis.
+2. Multivitamins & Minerals: Acts as nutritional insurance against micronutrient deficiencies caused by high training volume or restrictive diets.
+3. Omega-3 Fish Oil: Supports cardiovascular health, joint lubrication, and mitigates post-workout systemic inflammation.
+
+Key Takeaway: Prioritize whole food nutrition first. Use supplements strategically to close targeted gaps in your diet and elevate recovery efficiency.`,
   },
   {
     id: 'art-2',
     title: 'Creatine Benefits Explained',
-    subtitle: 'Boost strength and performance.',
+    subtitle: 'How the most researched supplement boosts power, strength, and cognitive recovery.',
     date: '08 Jun 2025',
+    readTime: '4 min read',
+    category: 'Supplement Science',
     image: creatineImg,
+    content: `Creatine Monohydrate is the gold standard of athletic supplements, backed by hundreds of peer-reviewed clinical studies. It works by supersaturating intramuscular phosphocreatine reserves, facilitating rapid regeneration of Adenosine Triphosphate (ATP) during intense bouts of physical exertion.
+
+Major Benefits:
+- Explosive Strength: Increases 1-rep max and high-intensity power output by 5-15%.
+- Muscle Cell Hydration: Draws water into muscle cells, boosting cell volume and triggering anabolic signaling.
+- Brain Function & Neuroprotection: Supports cognitive processing during sleep deprivation and high-stress mental tasks.
+
+How to Take: Take 3 to 5 grams daily at any convenient time. A loading phase (20g/day for 5 days) is optional; taking 5g daily will fully saturate muscle stores within 3 to 4 weeks. Always drink plenty of water!`,
   },
   {
     id: 'art-3',
     title: 'Best Supplements for Muscle Gain',
-    subtitle: 'Top picks and how to use them.',
+    subtitle: 'Top 4 evidence-based supplements that actually accelerate hypertrophy.',
     date: '06 Jun 2025',
+    readTime: '5 min read',
+    category: 'Hypertrophy',
     image: c4Img,
+    content: `Building lean muscle requires progressive overload in training, a slight caloric surplus, and adequate protein intake. While no pill replaces hard training, certain supplements provide proven physiological advantages:
+
+1. Whey Protein Isolate / Concentrate: Delivers high biological value protein with complete essential amino acid profiles immediately post-workout.
+2. Creatine Monohydrate: Maximizes high-energy power output so you can achieve extra reps and volume per set.
+3. Pre-Workout / Caffeine: Enhances central nervous system alertness, focus, and reduces perceived rate of exertion (RPE) during grueling training sessions.
+4. Essential Amino Acids (EAAs) or BCAAs: Beneficial during fasted training or long endurance sessions to prevent muscular catabolism.
+
+Recommendation: Stick to simple, high-potency ingredients with third-party testing certifications (Informed Choice, NSF). Consistency in training and sleep remains your greatest muscle-building asset.`,
   },
 ];

@@ -8,17 +8,11 @@ from .models import (
     RecentActivity,
 )
 
-def get_context_user(context):
+def get_request_user(context):
     request = context.get('request') if context else None
-    if request and request.user and request.user.is_authenticated:
+    if request and hasattr(request, 'user') and request.user.is_authenticated:
         return request.user
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    return (
-        User.objects.filter(email='demo@fitnova.com').first()
-        or User.objects.filter(email='ravi@fitnova.com').first()
-        or User.objects.first()
-    )
+    return None
 
 class DailyHealthLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,7 +27,9 @@ class DailyHealthLogSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at', 'updated_at')
 
     def create(self, validated_data):
-        user = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if not user:
+            raise serializers.ValidationError({"detail": "Authentication required."})
         log_date = validated_data.pop('date', timezone.localdate())
         log, _ = DailyHealthLog.objects.update_or_create(
             user=user,
@@ -49,7 +45,9 @@ class ReportGoalSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'current_value', 'target_value', 'percentage', 'color')
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -59,7 +57,9 @@ class ReportAreaOfImprovementSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'description', 'icon', 'is_resolved')
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -69,7 +69,9 @@ class ReportAIInsightSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'headline', 'description', 'consistency_rate_pct', 'generated_for_date', 'created_at')
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -79,5 +81,7 @@ class RecentActivitySerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'meta', 'date', 'icon')
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)

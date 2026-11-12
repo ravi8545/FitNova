@@ -81,6 +81,10 @@ export default function SupplementsPage({
   const [reminders, setReminders] = useState([]);
   const [wishlistProductIds, setWishlistProductIds] = useState([]);
   const [dailyLogs, setDailyLogs] = useState([]);
+  const [selectedProductModal, setSelectedProductModal] = useState(null);
+  const [selectedArticleModal, setSelectedArticleModal] = useState(null);
+  const [productSortBy, setProductSortBy] = useState('featured');
+  const [modalCartQty, setModalCartQty] = useState(1);
 
   // API Status: 'loading' | 'live' | 'demo' | 'error'
   const [apiStatus, setApiStatus] = useState('loading');
@@ -555,16 +559,24 @@ export default function SupplementsPage({
     }
   };
 
-  // Filter products by search and category
-  const filteredProducts = productsList.filter((item) => {
-    const matchesCat =
-      selectedCategory === 'all' || item.category === selectedCategory || item.category_slug === selectedCategory;
-    const matchesQuery =
-      searchQuery.trim() === '' ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.brand.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesQuery;
-  });
+  // Filter and sort products by search, category and selected order
+  const filteredProducts = productsList
+    .filter((item) => {
+      const matchesCat =
+        selectedCategory === 'all' || item.category === selectedCategory || item.category_slug === selectedCategory;
+      const matchesQuery =
+        searchQuery.trim() === '' ||
+        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCat && matchesQuery;
+    })
+    .sort((a, b) => {
+      if (productSortBy === 'price_asc') return Number(a.price || 0) - Number(b.price || 0);
+      if (productSortBy === 'price_desc') return Number(b.price || 0) - Number(a.price || 0);
+      if (productSortBy === 'rating_desc') return Number(b.rating || 0) - Number(a.rating || 0);
+      if (productSortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
+      return 0; // default featured / server order
+    });
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const cartSubtotal = cartItems.reduce(
@@ -770,40 +782,75 @@ export default function SupplementsPage({
 
           {/* Featured Supplements Section */}
           <div id="featured-supplements" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white tracking-tight">Featured Supplements</h3>
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className="flex items-center gap-1 text-xs font-bold text-[#2BAF34] hover:underline cursor-pointer"
-              >
-                <span>View All</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-white tracking-tight">Featured Supplements</h3>
+                <span className="text-[11px] font-semibold text-slate-400 bg-[#121B26] border border-[#1E2D42] px-2 py-0.5 rounded-full">
+                  {filteredProducts.length} items
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={productSortBy}
+                  onChange={(e) => setProductSortBy(e.target.value)}
+                  className="bg-[#0D141C] border border-[#162230] text-xs font-semibold text-slate-300 rounded-xl px-2.5 py-1.5 focus:border-[#2BAF34] focus:outline-none cursor-pointer"
+                >
+                  <option value="featured">Featured First</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="rating_desc">Highest Rated</option>
+                  <option value="name_asc">Name: A to Z</option>
+                </select>
+                <button
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setProductSortBy('featured');
+                  }}
+                  className="flex items-center gap-1 text-xs font-bold text-[#2BAF34] hover:underline cursor-pointer"
+                >
+                  <span>Reset</span>
+                </button>
+              </div>
             </div>
 
             {filteredProducts.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-[#0D141C] border border-[#162230] text-center text-slate-400 text-xs">
-                No supplements found matching your filter.
+              <div className="p-8 rounded-2xl bg-[#0D141C] border border-[#162230] text-center space-y-3">
+                <p className="text-slate-400 text-xs">No supplements found matching your search or category filter.</p>
+                <button
+                  onClick={() => {
+                    setSelectedCategory('all');
+                    setProductSortBy('featured');
+                  }}
+                  className="px-4 py-2 bg-[#121B26] hover:bg-[#1E2D42] text-[#2BAF34] border border-[#2BAF34]/30 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                >
+                  Reset All Filters
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 {filteredProducts.map((product) => {
                   const isWished = wishlistProductIds.includes(product.id);
                   const inCartItem = cartItems.find((i) => i.id === product.id);
+                  const discountPct = product.discount_percent || product.discountPercent;
                   return (
                     <div
                       key={product.id}
                       className="bg-[#0D141C] border border-[#162230] hover:border-[#2BAF34]/50 rounded-2xl p-3 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-black/60 group relative"
                     >
-                      {/* Top Tag & Wishlist */}
+                      {/* Top Tag, Discount & Wishlist */}
                       <div className="flex items-center justify-between mb-2">
-                        {product.badge ? (
-                          <span className={`text-[9px] px-2 py-0.5 rounded-md ${product.badge.color}`}>
-                            {product.badge.text}
-                          </span>
-                        ) : (
-                          <span />
-                        )}
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {product.badge ? (
+                            <span className={`text-[9px] px-2 py-0.5 rounded-md ${product.badge.color}`}>
+                              {product.badge.text}
+                            </span>
+                          ) : null}
+                          {discountPct > 0 && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#EF4444]/20 text-[#EF4444] font-bold border border-[#EF4444]/30">
+                              -{discountPct}%
+                            </span>
+                          )}
+                        </div>
 
                         <button
                           onClick={() => toggleWishlist(product.id)}
@@ -818,8 +865,14 @@ export default function SupplementsPage({
                         </button>
                       </div>
 
-                      {/* Product Image */}
-                      <div className="w-full h-24 flex items-center justify-center my-1 group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+                      {/* Product Image - Click to view detail */}
+                      <div
+                        onClick={() => {
+                          setSelectedProductModal(product);
+                          setModalCartQty(1);
+                        }}
+                        className="w-full h-24 flex items-center justify-center my-1 group-hover:scale-105 transition-transform duration-300 overflow-hidden cursor-pointer"
+                      >
                         <img
                           src={product.image}
                           alt={product.name}
@@ -830,7 +883,13 @@ export default function SupplementsPage({
                       {/* Product Info */}
                       <div className="mt-2 space-y-1">
                         <p className="text-[10px] text-slate-400 uppercase font-semibold">{product.brand}</p>
-                        <h4 className="text-xs font-bold text-white line-clamp-2 leading-tight">
+                        <h4
+                          onClick={() => {
+                            setSelectedProductModal(product);
+                            setModalCartQty(1);
+                          }}
+                          className="text-xs font-bold text-white line-clamp-2 leading-tight cursor-pointer hover:text-[#2BAF34] transition-colors"
+                        >
                           {product.name}
                         </h4>
 
@@ -843,9 +902,16 @@ export default function SupplementsPage({
 
                         {/* Price & Cart Button */}
                         <div className="flex items-center justify-between pt-2">
-                          <span className="text-xs sm:text-sm font-extrabold text-white">
-                            ₹{Number(product.price || 0).toLocaleString('en-IN')}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-xs sm:text-sm font-extrabold text-white">
+                              ₹{Number(product.price || 0).toLocaleString('en-IN')}
+                            </span>
+                            {product.originalPrice && Number(product.originalPrice) > Number(product.price) && (
+                              <span className="text-[10px] text-slate-500 line-through">
+                                ₹{Number(product.originalPrice).toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </div>
                           <button
                             onClick={() => addToCart(product)}
                             className={`p-2 rounded-xl transition-all relative cursor-pointer ${
@@ -1353,6 +1419,193 @@ export default function SupplementsPage({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Product Detail Modal */}
+      {selectedProductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#0D141C] border border-[#1E2D42] rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative space-y-5">
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedProductModal(null)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white bg-[#121B26] hover:bg-[#1E2D42] border border-[#1E2D42] transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Top Badge & Brand */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2BAF34] bg-[#2BAF34]/15 border border-[#2BAF34]/30 px-2.5 py-1 rounded-md">
+                {selectedProductModal.brand || 'FitNova'}
+              </span>
+              {selectedProductModal.badge && (
+                <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold ${selectedProductModal.badge.color}`}>
+                  {selectedProductModal.badge.text}
+                </span>
+              )}
+              {selectedProductModal.in_stock !== false ? (
+                <span className="text-[10px] font-bold text-[#2BAF34] flex items-center gap-1 ml-auto mr-10">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> In Stock
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-[#EF4444] flex items-center gap-1 ml-auto mr-10">
+                  <AlertCircle className="w-3.5 h-3.5" /> Out of Stock
+                </span>
+              )}
+            </div>
+
+            {/* Product Title & Rating */}
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {selectedProductModal.name}
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1.5">
+                <div className="flex items-center gap-1 text-[#F59E0B]">
+                  <Star className="w-4 h-4 fill-[#F59E0B]" />
+                  <span className="font-bold text-white">{selectedProductModal.rating || '4.8'}</span>
+                </div>
+                <span>•</span>
+                <span>{selectedProductModal.reviewsCount || selectedProductModal.reviews_count || '120+'} customer reviews</span>
+              </div>
+            </div>
+
+            {/* Product Image & Pricing Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center bg-[#121B26] border border-[#1E2D42] rounded-2xl p-5">
+              <div className="w-full h-44 flex items-center justify-center p-2 overflow-hidden">
+                <img
+                  src={selectedProductModal.image}
+                  alt={selectedProductModal.name}
+                  className="max-h-full max-w-full object-contain filter drop-shadow-xl"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <span className="text-[11px] text-slate-400 block font-medium">Price</span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-2xl font-black text-white">
+                      ₹{Number(selectedProductModal.price || 0).toLocaleString('en-IN')}
+                    </span>
+                    {selectedProductModal.originalPrice && Number(selectedProductModal.originalPrice) > Number(selectedProductModal.price) && (
+                      <span className="text-sm text-slate-500 line-through">
+                        ₹{Number(selectedProductModal.originalPrice).toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    {(selectedProductModal.discount_percent > 0 || selectedProductModal.discountPercent > 0) && (
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-[#EF4444]/20 text-[#EF4444] font-extrabold border border-[#EF4444]/30">
+                        Save {selectedProductModal.discount_percent || selectedProductModal.discountPercent}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-xs text-slate-300 space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#2BAF34]">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span className="font-semibold">100% Authentic & Lab Tested</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Complies with FSSAI & GMP standards. Free shipping on orders over ₹999.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {selectedProductModal.description && (
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Description</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {selectedProductModal.description}
+                </p>
+              </div>
+            )}
+
+            {/* Key Benefits */}
+            {selectedProductModal.benefits && (
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Benefits</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {selectedProductModal.benefits.split('\n').filter(Boolean).map((benefit, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-300 bg-[#121B26] p-2.5 rounded-xl border border-[#1E2D42]">
+                      <Check className="w-4 h-4 text-[#2BAF34] flex-shrink-0 mt-0.5" />
+                      <span>{benefit.replace(/^[-•*]\s*/, '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Actions */}
+            <div className="pt-2 border-t border-[#1E2D42] flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => toggleWishlist(selectedProductModal.id)}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-[#1E2D42] hover:border-red-500/50 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <Heart
+                  className={`w-4 h-4 ${
+                    wishlistProductIds.includes(selectedProductModal.id) ? 'text-red-500 fill-red-500' : ''
+                  }`}
+                />
+                <span className="text-xs font-semibold">
+                  {wishlistProductIds.includes(selectedProductModal.id) ? 'Saved' : 'Wishlist'}
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const prod = selectedProductModal;
+                  setSelectedProductModal(null);
+                  handleOpenModal({
+                    name: prod.name,
+                    category: prod.category || prod.category_slug || 'Protein',
+                    dosage: '1 Scoop (30g)',
+                    timing: 'Post Workout',
+                    status: 'Active',
+                    product: prod.id,
+                  });
+                }}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#121B26] hover:bg-[#1E2D42] border border-[#2BAF34]/50 text-white font-bold text-xs cursor-pointer transition-colors"
+              >
+                <Plus className="w-4 h-4 text-[#2BAF34]" />
+                <span>Add to My Stack</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-[#121B26] border border-[#1E2D42] rounded-xl px-2 py-1">
+                  <button
+                    onClick={() => setModalCartQty((q) => Math.max(1, q - 1))}
+                    className="p-1 text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs font-bold text-white px-2.5 min-w-[24px] text-center">
+                    {modalCartQty}
+                  </span>
+                  <button
+                    onClick={() => setModalCartQty((q) => q + 1)}
+                    className="p-1 text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    for (let i = 0; i < modalCartQty; i++) {
+                      addToCart(selectedProductModal);
+                    }
+                    setSelectedProductModal(null);
+                  }}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#2BAF34] hover:bg-[#35D440] text-black font-extrabold text-xs shadow-lg shadow-[#2BAF34]/25 transition-all cursor-pointer"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Add to Cart (₹{(Number(selectedProductModal.price || 0) * modalCartQty).toLocaleString('en-IN')})</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

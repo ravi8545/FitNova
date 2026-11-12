@@ -12,17 +12,11 @@ from .models import (
     SupplementArticle,
 )
 
-def get_context_user(context):
+def get_request_user(context):
     request = context.get('request') if context else None
-    if request and request.user and request.user.is_authenticated:
+    if request and hasattr(request, 'user') and request.user.is_authenticated:
         return request.user
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    return (
-        User.objects.filter(email='demo@fitnova.com').first()
-        or User.objects.filter(email='ravi@fitnova.com').first()
-        or User.objects.first()
-    )
+    return None
 
 class SupplementCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -89,8 +83,9 @@ class UserSupplementStackSerializer(serializers.ModelSerializer):
         return value.strip()
 
     def create(self, validated_data):
-        user = validated_data.get('user') or get_context_user(self.context)
-        validated_data['user'] = user
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -116,7 +111,9 @@ class SupplementReminderSerializer(serializers.ModelSerializer):
         return value.strip()
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -127,7 +124,9 @@ class SupplementDailyLogSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'taken_at')
 
     def create(self, validated_data):
-        user = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if not user:
+            raise serializers.ValidationError({"detail": "Authentication required."})
         stack_item = validated_data['stack_item']
         log_date = validated_data.get('date') or timezone.localdate()
         is_taken = validated_data.get('is_taken', True)
@@ -152,7 +151,9 @@ class SupplementGoalSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        user = validated_data.get('user') or get_request_user(self.context)
+        if user:
+            validated_data['user'] = user
         return super().create(validated_data)
 
 
@@ -171,15 +172,18 @@ class SupplementWishlistSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'created_at')
 
     def validate(self, attrs):
-        user = validated_data.get('user') or get_context_user(self.context)
+        request = self.context.get('request')
+        user = request.user if (request and request.user and request.user.is_authenticated) else None
         product = attrs.get('product')
         # Check duplicate on creation
-        if not self.instance and SupplementWishlist.objects.filter(user=user, product=product).exists():
+        if not self.instance and user and SupplementWishlist.objects.filter(user=user, product=product).exists():
             raise serializers.ValidationError({"detail": "This product is already in your wishlist."})
         return attrs
 
     def create(self, validated_data):
-        validated_data['user'] = validated_data.get('user') or get_context_user(self.context)
+        request = self.context.get('request')
+        if 'user' not in validated_data and request and request.user.is_authenticated:
+            validated_data['user'] = request.user
         return super().create(validated_data)
 
 
@@ -199,7 +203,8 @@ class SupplementCartItemSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        user = validated_data.get('user') or get_context_user(self.context)
+        request = self.context.get('request')
+        user = validated_data.get('user') or (request.user if request and request.user.is_authenticated else None)
         product = validated_data['product']
         quantity = validated_data.get('quantity', 1)
 
